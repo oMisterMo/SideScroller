@@ -23,7 +23,7 @@ public class Camera {
     
     public void gameUpdate(float deltaTime){
 //        camPos.subFrom(player.velocity.mult(deltaTime));
-        camPos.x -= player.velocity.x ;//* deltaTime;
+//        camPos.x -= player.velocity.x * deltaTime;
 //        camPos.y -= player.velocity.y * deltaTime;
     }
 

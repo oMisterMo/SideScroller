@@ -22,7 +22,7 @@ import javax.imageio.ImageIO;
  *
  * @author Mo
  */
-public class Player extends GameObject {
+public class Player extends DynamicGameObject {
 
     //Player states
     //All states out player can be in -> Different animation for each playerState
@@ -32,65 +32,101 @@ public class Player extends GameObject {
     public static final int STATE_ACTION = 3;
     public static final int STATE_PUNCH = 4;
     public static final int STATE_JUMP = 5; //Also is falling, can seperate
-    public static final int STATE_CLIMB = 6;
-    public static final int STATE_HURT = 7;
-    public static final int STATE_DEAD = 8;
-    public static int playerState = STATE_JUMP;
+    public static final int STATE_FALLING = 6; //Also is falling, can seperate
+    public static final int STATE_CLIMB = 7;
+    public static final int STATE_HURT = 8;
+    public static final int STATE_DEAD = 9;
+    public static int playerState = STATE_FALLING;
 
     //MovementStates
-    private static final int WALK_SPEED = 5;
-    private static final int FALL_SPEED = 600;
-
+    private static final int WALK_SPEED = 200;    //x
+    private static final int FALL_SPEED = 25;   //y
     private static final int JUMP_HEIGHT = 20;
-    private static final int FALL_ACEL = 10;
+    private static final int FALL_ACEL = 10;    //10 m/s
+//    public boolean grounded;
 
     private World world;
-    private BufferedImage player;
+    private BufferedImage playerImg;
     private Animation idle;
     private Animation leftWalk;
     private Animation rightWalk;
 
-    public boolean grounded;
-
-    public Vector2D position;
-    public Vector2D velocity;
-    private Vector2D acceleration;
-
+    //From dynamic game object
+//    public Vector2D position;
+//    public Vector2D velocity;
+//    private Vector2D acceleration;
     private Font f;
     private Vector2D fontPos;
-
     private Stroke stroke;
 
-    private int width;
-    private int height;
-    public Rectangle hitbox;
-    private boolean grav;
+//    private int width;
+//    private int height;
+    public Rectangle playerHitbox;  //outter blue hitbox
+
+    private Rectangle leftHitbox;
+    private Rectangle rightHitbox;
+    private Rectangle topHitbox;
+    private Rectangle bottomHitbox;
+//    private boolean grav;
 
     public Player(World world) {
         this.world = world;
 
         loadImages();
-        width = player.getWidth();
-        height = player.getHeight();
+        width = playerImg.getWidth();
+        height = playerImg.getHeight();
 
         position = new Vector2D(300, GamePanel.GAME_HEIGHT - Tile.TILE_HEIGHT * 2 - 100);
         velocity = new Vector2D(0, 0);
         acceleration = new Vector2D(0, FALL_ACEL);
 
-//        hitbox = new Rectangle((int) position.x, (int) position.y, width, height);
-        hitbox = new Rectangle(300, GamePanel.GAME_HEIGHT - Tile.TILE_HEIGHT * 2 - 100, width, height);
-        grounded = false;
+//        playerHitbox = new Rectangle((int) position.x, (int) position.y, width, height);
+        playerHitbox = new Rectangle(500, GamePanel.GAME_HEIGHT - Tile.TILE_HEIGHT * 2 - 80, width, height);
+        initInnerHitbox();
 
         f = new Font("Comic Sans MS", Font.PLAIN, 25);
         fontPos = new Vector2D(5, 60);
         stroke = new BasicStroke(1);
-        
-        grav = true;
 
+//        grav = true;
     }
 
     private void loadImages() {
-        this.player = Assets.player;
+        this.playerImg = Assets.player;
+    }
+
+    private void initInnerHitbox() {
+        //create inner hitbox to determin left,right top bottom collision
+        int w = playerHitbox.width / 4;
+        int h = playerHitbox.height / 2;
+
+        int padding = 2;//for top and bottom rects
+        //RED
+        topHitbox = new Rectangle(
+                (playerHitbox.x + playerHitbox.width / 2) - (w / 2),
+                playerHitbox.y + padding,
+                w, h - padding);
+        //WHITE
+        bottomHitbox = new Rectangle(
+                (playerHitbox.x + playerHitbox.width / 2) - (w / 2),
+                playerHitbox.y + h,
+                w, h - padding);
+        //YELLOW
+        leftHitbox = new Rectangle(topHitbox.x - w, playerHitbox.y + h / 2, w, h);
+        //DARK GRAY
+        rightHitbox = new Rectangle(topHitbox.x + w, playerHitbox.y + h / 2, w, h);
+//        grounded = false;
+        //Check if any of the inner rectangles intercept
+        System.out.println("top + bottom intercept? -> "
+                + topHitbox.intersects(bottomHitbox));
+        System.out.println("top + right intercept? -> "
+                + topHitbox.intersects(rightHitbox));
+        System.out.println("right + bottom intercept? -> "
+                + rightHitbox.intersects(bottomHitbox));
+        System.out.println("top + left intercept? -> "
+                + topHitbox.intersects(leftHitbox));
+        System.out.println("left + bottom intercept? -> "
+                + rightHitbox.intersects(leftHitbox));
     }
 
     public void keyPressed(KeyEvent e) {
@@ -99,27 +135,33 @@ public class Player extends GameObject {
         if (key == KeyEvent.VK_A) {
 //            playerState = STATE_WALK;
             velocity.x = -WALK_SPEED;
-//            System.out.println("velX"+velocity.x);
+            System.out.println("vel.x: " + velocity.x);
         }
+        
         if (key == KeyEvent.VK_D) {
 //            playerState = STATE_WALK;
             velocity.x = WALK_SPEED;
+            System.out.println("vel.x: " + velocity.x);
         }
+            
         if (key == KeyEvent.VK_W) {
             velocity.y = -WALK_SPEED;
+            System.out.println("vel.y: " + velocity.y);
         }
+        
         if (key == KeyEvent.VK_S) {
             velocity.y = WALK_SPEED;
+            System.out.println("vel.y: " + velocity.y);
         }
 
         if (key == KeyEvent.VK_SPACE) {
 //            System.out.println("JUMP");
-            grav = true;
-            if (grounded) {
-//                playerState = STATE_JUMP;
-                velocity.y = -JUMP_HEIGHT;
-                grounded = false;
-            }
+//            grav = true;
+//            if (grounded) {
+////                playerState = STATE_JUMP;
+//                velocity.y = -JUMP_HEIGHT;
+//                grounded = false;
+//            }
         }
     }
 
@@ -129,39 +171,81 @@ public class Player extends GameObject {
         if (key == KeyEvent.VK_A || key == KeyEvent.VK_D) {
 //            playerState = STATE_IDLE;
             velocity.x = 0;
+            System.out.println("vel.x: " + velocity.x);
         }
-//        if (key == KeyEvent.VK_W || key == KeyEvent.VK_S) {
-////            playerState = STATE_IDLE;
-//            velocity.y = 0;
-//        }
+        if (key == KeyEvent.VK_W || key == KeyEvent.VK_S) {
+//            playerState = STATE_IDLE;
+            velocity.y = 0;
+            System.out.println("vel.y: " + velocity.y);
+        }
     }
 
     public void setGrounded(boolean val) {
-        this.grounded = val;
+//        this.grounded = val;
     }
 
-    @Override
-    void gameUpdate(float deltaTime) {
-        if(grav){
-            System.out.println("applying grav");
-            velocity.y += acceleration.y*0.1;
-            velocity.y = Helper.Clamp(velocity.y, -100, 100);
+    private void handleCollisions3() {
+        /*
+         1.Detect if larger hitbox intercepts a tile
+         2.handle smaller intersections
+         */
+
+        //1.
+        //Goes through every tile in the game (NOT GOOD)
+        for (int j = 0; j < World.NO_OF_TILES_Y; j++) {
+            for (int i = 0; i < World.NO_OF_TILES_X; i++) {
+                Tile t = world.getTile(i, j);
+                if (t.solid) {
+                    if (playerHitbox.intersects(t.hitbox)) {
+                        System.out.println("PLAYER HITS TILE");
+                    }
+//                    //If player hits a single solid tile
+//                    if (col((playerHitbox.x + velocity.x),
+//                            (playerHitbox.y + velocity.y), t)) {
+////                        System.out.println("HIT");
+//                        int n = 0;
+//
+//                        velocity.x = 0;
+//                        velocity.y = 0;
+//                        System.out.println("On Platform");
+//                    }
+
+                }
+            }
         }
-        
-        
-        //Handle collision before we commit our movement
-        handleCollisions(deltaTime);
+    }
 
-        //update position due to velocity
-//        System.out.println("old: "+position);
-        hitbox.x += velocity.x; //* deltaTime;
-        hitbox.y += velocity.y; //* deltaTime;
-//        System.out.println("after we move it: "+hitbox);
-//        System.out.println("new: "+position);
+    /**
+     * Ensure objects are not travelling too fast to avoid tunneling
+     *
+     * @param deltaTime
+     */
+    private void handleCollisions2(float deltaTime) {
+        /*
+         1.Detect if larger hitbox intercepts a tile
+         2.handle smaller intersections
+         */
 
-//        //update players hitbox
-//        hitbox.x = (int) position.x;
-//        hitbox.y = (int) position.y;
+        //1.
+        //Goes through every tile in the game (NOT GOOD)
+        for (int j = 0; j < World.NO_OF_TILES_Y; j++) {
+            for (int i = 0; i < World.NO_OF_TILES_X; i++) {
+                Tile t = world.getTile(i, j);
+                if (t.solid) {
+                    //If player hits a single solid tile
+                    if (col((playerHitbox.x + velocity.x),
+                            (playerHitbox.y + velocity.y), t)) {
+//                        System.out.println("HIT");
+                        int n = 0;
+
+                        velocity.x = 0;
+                        velocity.y = 0;
+                        System.out.println("On Platform");
+                    }
+
+                }
+            }
+        }
     }
 
     private void handleCollisions(float deltaTime) {
@@ -171,103 +255,32 @@ public class Player extends GameObject {
                 Tile t = world.getTile(i, j);
                 if (t.solid) {
                     //If player hits a single solid tile
-                    if (col((hitbox.x + velocity.x), 
-                            (hitbox.y + velocity.y), t)) {
+                    if (col((playerHitbox.x + velocity.x),
+                            (playerHitbox.y + velocity.y), t)) {
 //                        System.out.println("HIT");
                         int n = 0;
                         //Get as close to the wall as possible
-                        while (!col((hitbox.x + sign(velocity.x)),
-                                (hitbox.y + sign(velocity.y)), t)) {
+                        while (!col((playerHitbox.x + sign(velocity.x)),
+                                (playerHitbox.y + sign(velocity.y)), t)) {
                             System.out.println("Inside while loop!: " + n++);
-                            System.out.println("sign(velocity.x) = "+sign(velocity.x));
-                            System.out.println("sign(velocity.y) = "+sign(velocity.y));
-                            hitbox.x += sign(velocity.x);
-                            hitbox.y += sign(velocity.y);
+                            System.out.println("sign(velocity.x) = " + sign(velocity.x));
+                            System.out.println("sign(velocity.y) = " + sign(velocity.y));
+                            playerHitbox.x += sign(velocity.x);
+                            playerHitbox.y += sign(velocity.y);
                         }
-                        grounded = true;
-                        grav = false;
+//                        grounded = true;
+//                        grav = false;
 //                        Player.playerState = Player.STATE_IDLE;
-                        
+
                         velocity.x = 0;
                         velocity.y = 0;
                         System.out.println("On Platform");
-                    }else{
-//                        grav = true;
                     }
-                    
+
                 }
             }
         }
     }
-
-//    private void handleCollisionsOLD(float deltaTime) {
-//        /*
-//         Don't let player enter tile
-//            
-//         1.push player out of tile
-//         2.set correct states
-//         */
-////            Vector2D overlap = new Vector2D();
-////            Rectangle overlap = new Rectangle();
-////            Rectangle.intersect(player.hitbox, t.hitbox, overlap);
-////            System.out.println("************************");
-////            System.out.println("player: " + player.hitbox);
-////            System.out.println("hitbox: " + t.hitbox);
-////            System.out.println("overlap: " + overlap);
-////            System.out.println("");
-////
-////            if (overlap.height < overlap.width) {
-////                player.position.y += overlap.height * sign(player.velocity.y);
-////            } else {
-////                player.position.x += overlap.width * sign(player.velocity.x);
-////            }
-////            pushOut(overlap);
-//
-//        Tile t = world.getTile(3, 10);
-////        if ( col(position.x + (velocity.x * deltaTime), position.y, t) ) {
-////            System.out.println("-x- col");
-////            System.out.println("sign vel.x: "+sign(velocity.x));
-////            while(!col(position.x + sign(velocity.x) * deltaTime, position.y, t)){
-////                position.x += sign(velocity.x);
-////            }
-////            velocity.x = 0;
-////            System.out.println(position);
-////        }
-////        if ( col(position.x, position.y + (velocity.y * deltaTime), t) ) {
-////            System.out.println("-y- col");
-////            while(!col(position.x, position.y + sign(velocity.x) * deltaTime, t)){
-////                position.y += sign(velocity.y);
-////            }
-////            velocity.y = 0;
-////            System.out.println(position);
-////        }
-//
-//        //Just before intercept
-////        System.out.println(hitbox);
-//        if (col(hitbox.x + velocity.x, hitbox.y
-//                + velocity.y, t)) {
-//            System.out.println("HIT");
-////            System.out.println("sign vel.x: " + sign(velocity.x));
-////            System.out.println("sign vel.y: " + sign(velocity.y));
-//            int n = 0;
-//            //Get as close to the wall as possible
-//            while (!col(hitbox.x + sign(velocity.x),
-//                    hitbox.y + sign(velocity.y), t)) {
-//                System.out.println("Inside while loop!: " + n++);
-//                System.out.println(sign(velocity.x));
-//                System.out.println(sign(velocity.y));
-//                hitbox.x += sign(velocity.x);
-//                hitbox.y += sign(velocity.y);
-//            }
-//            velocity.x = 0;
-//            velocity.y = 0;
-//            grounded = true;
-//            
-//            System.out.println("On Platform");
-//        }
-////        System.out.println(hitbox);
-//
-//    }
 
     /**
      * Player tile collision
@@ -278,10 +291,10 @@ public class Player extends GameObject {
      */
     private boolean collides(Player player, Tile tile) {
         //does first object collides with second?
-//        return player.getHitbox().intersects(tile.hitbox);
-//        Rectangle test = player.hitbox;
+//        return player.getHitbox().intersects(tile.playerHitbox);
+//        Rectangle test = player.playerHitbox;
 //        test.x +=
-        return tile.hitbox.intersects(hitbox);
+        return tile.hitbox.intersects(playerHitbox);
     }
 
     /**
@@ -307,41 +320,53 @@ public class Player extends GameObject {
 //     */
 //    private boolean hor_col(Player player, Tile tile, float dt) {
 //        //does first object collides with second?
-//        return tile.hitbox.contains(player.position.x + player.velocity.x * dt, player.position.y);
-////        return player.getHitbox().intersects(tile.hitbox);
+//        return tile.playerHitbox.contains(player.position.x + player.velocity.x * dt, player.position.y);
+////        return player.getHitbox().intersects(tile.playerHitbox);
 //    }
     private boolean col(float x, float y, Tile t) {
         //does first object collides with second?
-//        hitbox.x += x; hitbox.y+=y;
-//        System.out.println("old hitbox: "+this.hitbox);
-//        System.out.println("new hitbox: "+ (this.hitbox.x + x));
-        return t.hitbox.intersects(x, y, hitbox.width, hitbox.height);
+//        playerHitbox.x += x; playerHitbox.y+=y;
+//        System.out.println("old playerHitbox: "+this.playerHitbox);
+//        System.out.println("new playerHitbox: "+ (this.playerHitbox.x + x));
+        return t.hitbox.intersects(x, y, playerHitbox.width, playerHitbox.height);
     }
 
     private void updateIdle() {
 //        System.out.println("STATE: Idle");
-//        grounded = true;
-        //Update idle animation
-//        moving = false;
-//        left = false;
-//        right = false;
     }
 
     private void updateWalk() {
 //        System.out.println("STATE: Walking");
-        //Check if left or right
-//        grounded = true;
     }
 
     private void updateJump() {
 //        System.out.println("STATE: Jumping");
+    }
 
-//        grounded = false;
-        //TIMES BY DELTA TIME
-        if(!grounded){
-            velocity.y += acceleration.y*0.1;
+    @Override
+    void gameUpdate(float deltaTime) {
+        if (playerState == STATE_FALLING || playerState == STATE_JUMP) {
+            System.out.println("applying grav");
+//            System.out.println(velocity);
+            //velocity never faster than 25m/s
+            velocity.y += acceleration.y * deltaTime;
+            velocity.y = Helper.Clamp(velocity.y, -25, 25);
         }
+
+        //Handle collision before we commit our movement
         
+        //Move player otter hitbox
+        playerHitbox.x += (velocity.x * deltaTime);
+        playerHitbox.y += (velocity.y * deltaTime);
+        //Move platers inner hitbox
+        leftHitbox.x += (velocity.x * deltaTime);
+        leftHitbox.y += (velocity.y * deltaTime);
+        rightHitbox.x += (velocity.x * deltaTime);
+        rightHitbox.y += (velocity.y * deltaTime);
+        topHitbox.x += (velocity.x * deltaTime);
+        topHitbox.y += (velocity.y * deltaTime);
+        bottomHitbox.x += (velocity.x * deltaTime);
+        bottomHitbox.y += (velocity.y * deltaTime);
     }
 
     /**
@@ -351,19 +376,29 @@ public class Player extends GameObject {
     void gameRender(Graphics2D g) {
         g.setStroke(stroke);
         g.setColor(Color.BLUE);
-        //Draw hitbox
+        //Draw playerHitbox
 //        g.fillRect((int) position.x, (int) position.y, width, height);
-        g.drawRect((int) hitbox.x, (int) hitbox.y, width, height);
+        g.drawRect((int) playerHitbox.x, (int) playerHitbox.y, width, height);
         //Draw player
 //        g.drawImage(player, (int) position.x, (int) position.y, null);
 
 //        drawInfo(g);
+        //Draw all hit boxes
+        g.setColor(Color.ORANGE);
+        g.fillRect(leftHitbox.x, leftHitbox.y, leftHitbox.width, leftHitbox.height);
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(rightHitbox.x, rightHitbox.y, rightHitbox.width, rightHitbox.height);
+        g.setColor(Color.RED);
+        g.fillRect(topHitbox.x, topHitbox.y, topHitbox.width, topHitbox.height);
+        g.setColor(Color.WHITE);
+        g.fillRect(bottomHitbox.x, bottomHitbox.y, bottomHitbox.width, bottomHitbox.height);
     }
 
     public void drawInfo(Graphics2D g) {
         g.setColor(Color.WHITE);
         g.setFont(f);
-        g.drawString("Pos: " + String.valueOf(position), fontPos.x, fontPos.y);
+        g.drawString("Draw REAL POS", fontPos.x, fontPos.y);
+//        g.drawString("Pos: " + String.valueOf(position), fontPos.x, fontPos.y);
         g.drawString("Vel: " + String.valueOf(velocity), fontPos.x, fontPos.y + 35);
         g.drawString("Acc: " + String.valueOf(acceleration), fontPos.x, fontPos.y + 65);
     }

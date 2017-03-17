@@ -81,7 +81,19 @@ public class GamePanel extends JPanel implements Runnable {
         player = new Player(world);
         camera = new Camera(player, new Vector2D());
 
-        //-----------------------------START my random test
+        initManWalk();
+        initMarioSprites();
+
+        //-----------------------------END my random test
+        backgroundColor = new Color(0, 0, 0);    //Represents colour of background
+        //backgroundColor = new Color(255, 255, 255);    //Represents colour of background
+
+        //Load listeners
+        addKeyListener(new TAdapter());
+        addMouseListener(new MAdapter());
+    }
+
+    private void initManWalk() {
         ss = new SpriteSheet("C:\\Users\\Mo\\Games\\"
                 + "myGames\\Pictures\\SpriteSheets\\man_walk.png");
         spritesheet = ss.getSpriteSheet();
@@ -93,7 +105,9 @@ public class GamePanel extends JPanel implements Runnable {
         manWalk = new Animation();
         manWalk.setFrames(mario);
         manWalk.setDelay(100);
+    }
 
+    private void initMarioSprites() {
         ss2 = new SpriteSheet("C:\\Users\\Mo\\Games\\"
                 + "myGames\\Pictures\\SpriteSheets\\general.png");
         //Yoshi Coin
@@ -131,14 +145,6 @@ public class GamePanel extends JPanel implements Runnable {
         ani4 = new Animation();
         ani4.setFrames(general);
         ani4.setDelay(130);
-
-        //-----------------------------END my random test
-        backgroundColor = new Color(0, 0, 0);    //Represents colour of background
-        //backgroundColor = new Color(255, 255, 255);    //Represents colour of background
-
-        //Load listeners
-        addKeyListener(new TAdapter());
-        addMouseListener(new MAdapter());
     }
 
     //METHODS
@@ -179,6 +185,7 @@ public class GamePanel extends JPanel implements Runnable {
             startTime = System.nanoTime();
 
             //start2 = System.nanoTime();
+//            System.out.println("dt:"+ (1f / FPS));
             gameUpdate(1f / FPS);
             //timeMillis2 = (System.nanoTime() - start2) / 1000000;
 
@@ -235,24 +242,6 @@ public class GamePanel extends JPanel implements Runnable {
 
     }
 
-    private void gameUpdate(float deltaTime) {
-
-        //********** Do updates HERE **********
-        camera.gameUpdate(deltaTime);
-
-        world.gameUpdate(deltaTime);
-        player.gameUpdate(deltaTime);
-
-        manWalk.update();
-        ani1.update();
-        ani2.update();
-        ani3.update();
-        ani4.update();
-
-//        //Check for collisions
-//        handleCollisions(deltaTime);
-    }
-
     private void handleCollisions(float dt) {
 //        System.out.println(collides(player, world.getTile(3, 10)));
 
@@ -284,10 +273,10 @@ public class GamePanel extends JPanel implements Runnable {
 //             */
 ////            Vector2D overlap = new Vector2D();
 //            Rectangle overlap = new Rectangle();
-//            Rectangle.intersect(player.hitbox, t.hitbox, overlap);
+//            Rectangle.intersect(player.playerHitbox, t.playerHitbox, overlap);
 //            System.out.println("************************");
-//            System.out.println("player: " + player.hitbox);
-//            System.out.println("hitbox: " + t.hitbox);
+//            System.out.println("player: " + player.playerHitbox);
+//            System.out.println("playerHitbox: " + t.playerHitbox);
 //            System.out.println("overlap: " + overlap);
 //            System.out.println("");
 //
@@ -299,7 +288,6 @@ public class GamePanel extends JPanel implements Runnable {
 //            pushOut(overlap);
 //        }
 //    }
-
 //    private void checkAllTiles() {
 //        /*
 //         **Have collidable abstract class**
@@ -320,7 +308,7 @@ public class GamePanel extends JPanel implements Runnable {
 ////                        player.velocity.x =0;
 //                        player.velocity.y = 0;
 ////                        Rectangle overLap = new Rectangle();
-////                        Rectangle.intersect(player.hitbox, t.hitbox, overLap);
+////                        Rectangle.intersect(player.playerHitbox, t.playerHitbox, overLap);
 //////                        pushOut(overLap);
 //                        player.position.y = t.y - Tile.TILE_HEIGHT;
 //
@@ -329,7 +317,6 @@ public class GamePanel extends JPanel implements Runnable {
 //            }
 //        }
 //    }
-
     /**
      * If x > 0 return 1 else -1
      *
@@ -358,14 +345,13 @@ public class GamePanel extends JPanel implements Runnable {
 //        player.position.x += player.velocity.x * dt;
 //    }
     private void pushOut(Player p, Tile t) {
-//        p.hitbox.
+//        p.playerHitbox.
     }
 
 //    private boolean collides(GameObject ob, GameObject ob2) {
 //        //does first object collides with second?
 //        return ob.getHitbox().intersects(ob2.getHitbox());
 //    }
-
 //    /**
 //     * Player tile collision
 //     *
@@ -375,9 +361,8 @@ public class GamePanel extends JPanel implements Runnable {
 //     */
 //    private boolean collides(Player player, Tile tile) {
 //        //does first object collides with second?
-//        return player.getHitbox().intersects(tile.hitbox);
+//        return player.getHitbox().intersects(tile.playerHitbox);
 //    }
-
     /**
      * Player tile collision
      *
@@ -388,13 +373,13 @@ public class GamePanel extends JPanel implements Runnable {
     private boolean hor_col(Player player, Tile tile, float dt) {
         //does first object collides with second?
         return tile.hitbox.contains(player.position.x + player.velocity.x * dt, player.position.y);
-//        return player.getHitbox().intersects(tile.hitbox);
+//        return player.getHitbox().intersects(tile.playerHitbox);
     }
 
     private boolean hor_col2(Player player, Tile tile, float dt) {
         //does first object collides with second?
         return tile.hitbox.contains(sign(player.position.x + player.velocity.x * dt), player.position.y);
-//        return player.getHitbox().intersects(tile.hitbox);
+//        return player.getHitbox().intersects(tile.playerHitbox);
     }
 
     /**
@@ -407,7 +392,25 @@ public class GamePanel extends JPanel implements Runnable {
     private boolean ver_col(Player player, Tile tile, float dt) {
         //does first object collides with second?
         return tile.hitbox.contains(player.position.x, player.position.y + player.velocity.y * dt);
-//        return player.getHitbox().intersects(tile.hitbox);
+//        return player.getHitbox().intersects(tile.playerHitbox);
+    }
+
+    private void gameUpdate(float deltaTime) {
+
+        //********** Do updates HERE **********
+//        camera.gameUpdate(deltaTime);
+
+        world.gameUpdate(deltaTime);
+        player.gameUpdate(deltaTime);
+
+//        manWalk.update();
+//        ani1.update();
+//        ani2.update();
+//        ani3.update();
+//        ani4.update();
+
+//        //Check for collisions
+//        handleCollisions(deltaTime);
     }
 
     /**
@@ -418,56 +421,49 @@ public class GamePanel extends JPanel implements Runnable {
         g.setColor(backgroundColor);
         g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-        
-        
         //********** Do drawings HERE **********
         //When camera moves, so does game world
-        
         //--uptohere
-        AffineTransform old = g.getTransform();
-        
-        AffineTransform tran = new AffineTransform();
-        tran.translate(GAME_WIDTH/2, GAME_HEIGHT);
-        tran.scale(1.5, 1.5);
-        tran.translate(-GAME_WIDTH/2, -GAME_HEIGHT);
-        g.setTransform(tran);
+//        AffineTransform old = g.getTransform();
+
+//        AffineTransform tran = new AffineTransform();
+//        tran.translate(GAME_WIDTH/2, GAME_HEIGHT);
+//        tran.scale(3.5, 3.5);
+//        tran.translate(-GAME_WIDTH/2, -GAME_HEIGHT);
+//        g.setTransform(tran);
         //REMOVE ABOVE &  +100, + g.setTransform(old);
         //Draw here
-        
-        
-        
-        
-        g.translate(camera.camPos.x+100, camera.camPos.y);
+
+//        g.translate(camera.camPos.x + 100, camera.camPos.y);
         //Draw random animations
-        g.drawImage(manWalk.getImage(), 300, 430, null);
-        g.drawImage(ani1.getImage(),
-                (int) GamePanel.GAME_WIDTH / 2 - 150, (int) GamePanel.GAME_HEIGHT / 2 + 80,
-                null);
-        g.drawImage(ani2.getImage(),
-                (int) GamePanel.GAME_WIDTH / 2 + 25 - 150, (int) GamePanel.GAME_HEIGHT / 2 + 80,
-                null);
-        g.drawImage(ani3.getImage(),
-                (int) GamePanel.GAME_WIDTH / 2 + 50 - 150, (int) GamePanel.GAME_HEIGHT / 2 + 80,
-                null);
-        g.drawImage(ani4.getImage(),
-                (int) GamePanel.GAME_WIDTH / 2 + 75 - 150, (int) GamePanel.GAME_HEIGHT / 2 + 80,
-                null);
+//        g.drawImage(manWalk.getImage(), 300, 430, null);
+//        g.drawImage(ani1.getImage(),
+//                (int) GamePanel.GAME_WIDTH / 2 - 150, (int) GamePanel.GAME_HEIGHT / 2 + 80,
+//                null);
+//        g.drawImage(ani2.getImage(),
+//                (int) GamePanel.GAME_WIDTH / 2 + 25 - 150, (int) GamePanel.GAME_HEIGHT / 2 + 80,
+//                null);
+//        g.drawImage(ani3.getImage(),
+//                (int) GamePanel.GAME_WIDTH / 2 + 50 - 150, (int) GamePanel.GAME_HEIGHT / 2 + 80,
+//                null);
+//        g.drawImage(ani4.getImage(),
+//                (int) GamePanel.GAME_WIDTH / 2 + 75 - 150, (int) GamePanel.GAME_HEIGHT / 2 + 80,
+//                null);
         world.gameRender(g);
         player.gameRender(g);
-        g.translate(-camera.camPos.x, -camera.camPos.y);
+//        g.translate(-camera.camPos.x, -camera.camPos.y);
 
         //Draw text information----------
         g.setColor(Color.RED);
 //        g.fillRect(0, 0, 10, 10);//delete me origin 
         g.drawString("FPS:" + averageFPS, 5, 25);
         player.drawInfo(g);
-        if (player.grounded) {
-            g.setColor(Color.YELLOW);
-            g.drawOval(700, 100, 50, 50);
-        }
-        
-        
-        g.setTransform(old);
+//        if (player.grounded) {
+//            g.setColor(Color.YELLOW);
+//            g.drawOval(700, 100, 50, 50);
+//        }
+
+//        g.setTransform(old);
     }
 
     private void gameDraw() {
@@ -486,7 +482,6 @@ public class GamePanel extends JPanel implements Runnable {
         @Override
         public void keyPressed(KeyEvent e) {
             //Handle player from world movement
-
             player.keyPressed(e);
         }
 
