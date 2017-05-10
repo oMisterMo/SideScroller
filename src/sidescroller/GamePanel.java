@@ -1,27 +1,21 @@
 package sidescroller;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.Rectangle;
 import javax.swing.JPanel;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-
-import java.util.ArrayList;
+import common.Vector2D;
 
 /**
- * Always when you remove you have to set the variable to null -> AVOID MEMORY
+ * When you remove you have to set the variable to null -> AVOID MEMORY
  * LEAKS
  *
  * 06-Sep-2016, 23:03:23.
@@ -39,19 +33,22 @@ public class GamePanel extends JPanel implements Runnable {
     private BufferedImage image;
     private Graphics2D g;
 
+    private Input input;
+
     private final int FPS = 60;
     private long averageFPS;
-    //dont need -> Checks to see if game loop sleeps for negative time
-    private int counter = 0;
+    private float scaleTime = 1;
 
     //GAME VARIABLES HERE-------------------------------------------------------
     private Color backgroundColor;    //Represents colour of background
 
-    private Assets assets;
+//    private Assets assets;    //Not needed here
     private Camera camera;
     private World world;
     private Player player;
+    private Clouds clouds;
 
+    //Extras random things
     private SpriteSheet ss;
     private BufferedImage spritesheet;
     private Animation manWalk;
@@ -60,8 +57,6 @@ public class GamePanel extends JPanel implements Runnable {
     private Animation ani2;
     private Animation ani3;
     private Animation ani4;
-
-    private int num = 0;
 
     //CONSTRUCTOR
     public GamePanel() {
@@ -76,20 +71,23 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     private void init() {
-        assets = new Assets();
+//        assets = new Assets();
+        Assets.loadImages();
         world = new World();
         player = new Player(world);
+        clouds = new Clouds();
         camera = new Camera(player, new Vector2D());
 
-        initManWalk();
-        initMarioSprites();
-
+//        initManWalk();
+//        initMarioSprites();
         //-----------------------------END my random test
         backgroundColor = new Color(0, 0, 0);    //Represents colour of background
-        //backgroundColor = new Color(255, 255, 255);    //Represents colour of background
+//        backgroundColor = new Color(135,206,235);    //Represents colour of background
 
         //Load listeners
-        addKeyListener(new TAdapter());
+        input = new Input();
+        addKeyListener(input);
+//        addKeyListener(new TAdapter());
         addMouseListener(new MAdapter());
     }
 
@@ -168,12 +166,7 @@ public class GamePanel extends JPanel implements Runnable {
         long totalTime = 0;
         long waitTime;
         long targetTime = 1000 / FPS;
-
-        //To test independent speed
-        long start2 = 0;
-        long timeMillis2 = 0;
-        long timeMillis3 = 0;
-        long timeMillis4 = 0;
+        int counter = 0;    //can delete 
 
         running = true;
 
@@ -184,22 +177,12 @@ public class GamePanel extends JPanel implements Runnable {
         while (running) {
             startTime = System.nanoTime();
 
-            //start2 = System.nanoTime();
-//            System.out.println("dt:"+ (1f / FPS));
+            handleInput();
             gameUpdate(1f / FPS);
-            //timeMillis2 = (System.nanoTime() - start2) / 1000000;
-
-            //start2 = System.nanoTime();
+            Input.updateLastKey();
             gameRender(g);
-            //timeMillis3 = (System.nanoTime() - start2) / 1000000;
-
-            //start2 = System.nanoTime();
             gameDraw();
-            //timeMillis4 = (System.nanoTime() - start2) / 1000000;
 
-//            gameUpdate();
-//            gameRender(g);
-//            gameDraw();
             //How long it took to run
             timeTaken = (System.nanoTime() - startTime) / 1000000;
             //              16ms - targetTime
@@ -213,14 +196,6 @@ public class GamePanel extends JPanel implements Runnable {
                 System.out.println("timeTaken = " + timeTaken + "\n");
             }
 
-//            //Speed TEST methods
-//            if(frameCount >= 58) {
-//                //Test the time taken to run
-//                System.out.println("Update time: " + timeMillis2);
-//                System.out.println("Render time: " + timeMillis3);
-//                System.out.println("Draw time: " + timeMillis4);
-//                System.out.println("------------------------------------------");
-//            }
             try {
                 //System.out.println("Sleeping for: " + waitTime);
                 //thread.sleep(waitTime);
@@ -242,175 +217,43 @@ public class GamePanel extends JPanel implements Runnable {
 
     }
 
-    private void handleCollisions(float dt) {
-//        System.out.println(collides(player, world.getTile(3, 10)));
-
-//        checkOneTile();
-//        checkAllTiles();
-    }
-
-    private void pushOut(Rectangle overlap) {
-        if (player.velocity.x > 0) {
-            player.position.x -= overlap.width - 1;
-        } else if (player.velocity.x < 0) {
-            player.position.x += overlap.width + 1;
+    private void handleInput() {
+        if (Input.isKeyPressed(KeyEvent.VK_N)) {
+            scaleTime = 0.3f;
+        } else if (Input.isKeyReleased(KeyEvent.VK_N)) {
+            scaleTime = 1f;
         }
-        if (player.velocity.y > 0) {
-            player.position.y -= overlap.height - 1;
-        } else if (player.velocity.x < 0) {
-            player.position.y += overlap.height + 1;
+        if (Input.isKeyTyped(KeyEvent.VK_X)) {
+            backgroundColor = new Color(0, 0, 0);
         }
-    }
-
-//    private void checkOneTile() {
-//        Tile t = world.getTile(3, 10);
-//        if (collides(player, t)) {
-//            /*
-//             Don't let player enter tile
-//            
-//             1.push player out of tile
-//             2.set correct states
-//             */
-////            Vector2D overlap = new Vector2D();
-//            Rectangle overlap = new Rectangle();
-//            Rectangle.intersect(player.playerHitbox, t.playerHitbox, overlap);
-//            System.out.println("************************");
-//            System.out.println("player: " + player.playerHitbox);
-//            System.out.println("playerHitbox: " + t.playerHitbox);
-//            System.out.println("overlap: " + overlap);
-//            System.out.println("");
-//
-//            if (overlap.height < overlap.width) {
-//                player.position.y += overlap.height * sign(player.velocity.y);
-//            } else {
-//                player.position.x += overlap.width * sign(player.velocity.x);
-//            }
-//            pushOut(overlap);
-//        }
-//    }
-//    private void checkAllTiles() {
-//        /*
-//         **Have collidable abstract class**
-//         -dont need to go through every tile
-//         -dont need to check if tile is solid
-//         */
-//        
-//        //Goes through every tile in the game
-//        for (int j = 0; j < World.NO_OF_TILES_Y; j++) {
-//            for (int i = 0; i < World.NO_OF_TILES_X; i++) {
-//                Tile t = world.getTile(i, j);
-//                if (t.solid) {
-//                    //If player hits a single solid tile
-//                    if (collides(player, t)) {
-//                        System.out.println("hit.." + num++);
-//                        player.grounded = true;
-//                        Player.playerState = Player.STATE_IDLE;
-////                        player.velocity.x =0;
-//                        player.velocity.y = 0;
-////                        Rectangle overLap = new Rectangle();
-////                        Rectangle.intersect(player.playerHitbox, t.playerHitbox, overLap);
-//////                        pushOut(overLap);
-//                        player.position.y = t.y - Tile.TILE_HEIGHT;
-//
-//                    }
-//                }
-//            }
-//        }
-//    }
-    /**
-     * If x > 0 return 1 else -1
-     *
-     * @param x
-     * @return Returns 1 or -1 depending on state of input
-     */
-    private int sign(float x) {
-        int num = 1;
-        if (x > 0) {
-            return -1;
+        if (Input.isKeyTyped(KeyEvent.VK_C)) {
+            backgroundColor = new Color(100, 120, 100);
         }
-        return num;
-    }
-
-//    private void testCol() {
-//        Tile t = world.getTile(3, 10);
-//        if (hor_col(player, t, dt)) {
-//            System.out.println("HIT");
-//            while (!hor_col2(player, t, dt)) {
-//                player.position.x += sign(player.velocity.x);
-//                System.out.println("Pushing out");
-//                System.out.println(sign(player.velocity.x));
-//            }
-//            player.velocity.x = 0;
-//        }
-//        player.position.x += player.velocity.x * dt;
-//    }
-    private void pushOut(Player p, Tile t) {
-//        p.playerHitbox.
-    }
-
-//    private boolean collides(GameObject ob, GameObject ob2) {
-//        //does first object collides with second?
-//        return ob.getHitbox().intersects(ob2.getHitbox());
-//    }
-//    /**
-//     * Player tile collision
-//     *
-//     * @param ob
-//     * @param tile
-//     * @return
-//     */
-//    private boolean collides(Player player, Tile tile) {
-//        //does first object collides with second?
-//        return player.getHitbox().intersects(tile.playerHitbox);
-//    }
-    /**
-     * Player tile collision
-     *
-     * @param ob
-     * @param tile
-     * @return
-     */
-    private boolean hor_col(Player player, Tile tile, float dt) {
-        //does first object collides with second?
-        return tile.hitbox.contains(player.position.x + player.velocity.x * dt, player.position.y);
-//        return player.getHitbox().intersects(tile.playerHitbox);
-    }
-
-    private boolean hor_col2(Player player, Tile tile, float dt) {
-        //does first object collides with second?
-        return tile.hitbox.contains(sign(player.position.x + player.velocity.x * dt), player.position.y);
-//        return player.getHitbox().intersects(tile.playerHitbox);
-    }
-
-    /**
-     * Player tile collision
-     *
-     * @param ob
-     * @param tile
-     * @return
-     */
-    private boolean ver_col(Player player, Tile tile, float dt) {
-        //does first object collides with second?
-        return tile.hitbox.contains(player.position.x, player.position.y + player.velocity.y * dt);
-//        return player.getHitbox().intersects(tile.playerHitbox);
+        player.handleInput();
+        world.handleInput();
     }
 
     private void gameUpdate(float deltaTime) {
 
         //********** Do updates HERE **********
-//        camera.gameUpdate(deltaTime);
+        deltaTime *= scaleTime; //Objects that are slow mo after this line
 
+        camera.gameUpdate(deltaTime);
         world.gameUpdate(deltaTime);
         player.gameUpdate(deltaTime);
+        clouds.gameUpdate(deltaTime);
 
+        updateRandomThings();
+//        //Check for collisions
+//        handleCollisions(deltaTime);
+    }
+
+    private void updateRandomThings() {
 //        manWalk.update();
 //        ani1.update();
 //        ani2.update();
 //        ani3.update();
 //        ani4.update();
-
-//        //Check for collisions
-//        handleCollisions(deltaTime);
     }
 
     /**
@@ -423,18 +266,23 @@ public class GamePanel extends JPanel implements Runnable {
 
         //********** Do drawings HERE **********
         //When camera moves, so does game world
-        //--uptohere
-//        AffineTransform old = g.getTransform();
+        AffineTransform old = g.getTransform();
 
-//        AffineTransform tran = new AffineTransform();
-//        tran.translate(GAME_WIDTH/2, GAME_HEIGHT);
-//        tran.scale(3.5, 3.5);
-//        tran.translate(-GAME_WIDTH/2, -GAME_HEIGHT);
-//        g.setTransform(tran);
-        //REMOVE ABOVE &  +100, + g.setTransform(old);
-        //Draw here
+        //Camera view
+        g.translate(-camera.camPos.x, -camera.camPos.y);
+//        drawRandomThings();
+        clouds.gameRender(g);
+        world.gameRender(g);
+        player.gameRender(g);
+        g.translate(+camera.camPos.x, +camera.camPos.y);
 
-//        g.translate(camera.camPos.x + 100, camera.camPos.y);
+        //Draw text information
+        drawHelp();
+
+        g.setTransform(old);
+    }
+
+    private void drawRandomThings() {
         //Draw random animations
 //        g.drawImage(manWalk.getImage(), 300, 430, null);
 //        g.drawImage(ani1.getImage(),
@@ -449,21 +297,16 @@ public class GamePanel extends JPanel implements Runnable {
 //        g.drawImage(ani4.getImage(),
 //                (int) GamePanel.GAME_WIDTH / 2 + 75 - 150, (int) GamePanel.GAME_HEIGHT / 2 + 80,
 //                null);
-        world.gameRender(g);
-        player.gameRender(g);
-//        g.translate(-camera.camPos.x, -camera.camPos.y);
+    }
 
-        //Draw text information----------
+    private void drawHelp() {
         g.setColor(Color.RED);
-//        g.fillRect(0, 0, 10, 10);//delete me origin 
         g.drawString("FPS:" + averageFPS, 5, 25);
         player.drawInfo(g);
-//        if (player.grounded) {
-//            g.setColor(Color.YELLOW);
-//            g.drawOval(700, 100, 50, 50);
-//        }
-
-//        g.setTransform(old);
+        if (player.grounded) {
+            g.setColor(Color.YELLOW);
+            g.drawOval(1000, 100, 25, 25);
+        }
     }
 
     private void gameDraw() {
@@ -482,13 +325,15 @@ public class GamePanel extends JPanel implements Runnable {
         @Override
         public void keyPressed(KeyEvent e) {
             //Handle player from world movement
-            player.keyPressed(e);
+//            player.keyPressed(e);
+            
+//            world.keyPressed(e);
         }
 
         @Override
         public void keyReleased(KeyEvent e) {
             //ship.keyReleased(e);
-            player.keyReleased(e);
+//            player.keyReleased(e);
         }
     }
 

@@ -22,11 +22,12 @@ public class Animation {
      * Determines which image in the array to return
      *
      */
-    public void update(){
+    public void update(float deltaTime){
         long elapsed = (System.nanoTime() - startTime)/ 1000000;
 
         if(elapsed > delay){
-            currentFrame++;
+            currentFrame ++;
+//            currentFrame += delay * deltaTime;
             startTime = System.nanoTime();
         }
         //Resets frame count after full play through
@@ -63,5 +64,9 @@ public class Animation {
 
     public boolean playedOnce(){
         return playedOnce;
+    }
+    
+    public void resetAnimation(){
+        currentFrame = 0;
     }
 }

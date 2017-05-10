@@ -1,12 +1,6 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package sidescroller;
 
-import java.awt.Graphics2D;
+import common.Vector2D;
 
 /**
  * An abstract class may have static fields and static methods.
@@ -22,16 +16,11 @@ abstract class DynamicGameObject extends GameObject{
     protected Vector2D acceleration;
     protected Vector2D velocity;
     
+//    protected Vector2D friction;//?
+    
     //int or float?
     protected float width;
     protected float height;
     
-    @Override
-    void gameUpdate(float deltaTime) {
-    }
-
-    @Override
-    void gameRender(Graphics2D g) {
-    }
     
 }

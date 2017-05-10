@@ -18,7 +18,7 @@ import javax.imageio.ImageIO;
  */
 public class SpriteSheet {
     
-    private BufferedImage spriteSheet;
+    private  BufferedImage spriteSheet; //make static???
     
     public SpriteSheet(BufferedImage image){
         this.spriteSheet = image;
@@ -29,7 +29,7 @@ public class SpriteSheet {
         try{
             spriteSheet = ImageIO.read(new File(spritePath));
         }catch(IOException e){
-            System.out.println("Can not open sprite sheet");
+            System.out.println("Can not open spritesheet");
         }
     }
     

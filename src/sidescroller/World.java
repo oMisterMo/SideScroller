@@ -1,23 +1,10 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package sidescroller;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Stroke;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
-import javax.imageio.ImageIO;
 
 /**
  * 16/05/2016
@@ -31,6 +18,11 @@ public class World extends GameObject {
     public static final int NO_OF_TILES_Y = (GamePanel.GAME_HEIGHT / Tile.TILE_HEIGHT);
 
     public static final int NO_OF_LEVELS = 1;
+    //View changer
+    public static final int HITBOX_MODE = 0;
+    public static final int BITMAP_MODE = 1;
+    public static final int BITMAP_SPIKE_MODE = 2;
+    public static int renderMode = HITBOX_MODE;
 
     //Array holding all tiles
     private Tile[][] tiles;
@@ -61,7 +53,7 @@ public class World extends GameObject {
     }
 
     /**
-     * Sets all tiles to null
+     * Sets all spikeBlocks to null
      */
     public void clearBoard() {
         System.out.println("Setting all tiles to null...");
@@ -85,7 +77,7 @@ public class World extends GameObject {
     }
 
     /**
-     * Sets all tiles to empty
+     * Sets all spikeBlocks to empty
      *
      * FIX LOGIC HERE
      */
@@ -137,22 +129,30 @@ public class World extends GameObject {
                 if (r == 0 && g == 0 && b == 0) {
                     //System.out.println("Black block at: " + x + " " + y);
                     tiles[rows][cols].setTile(rows, cols, Tile.EMPTY);
-
                 }
                 //If the current pixel is grey
                 if (r == 255 && g == 0 && b == 0) {
                     //System.out.println("Wall block at: " + x + " " + y);
-                    tiles[rows][cols].setTile(rows, cols, Tile.LEFT);
-
+                    tiles[rows][cols].setTile(rows, cols, Tile.TL);
                 }
                 if (r == 0 && g == 255 && b == 0) {
                     //System.out.println("Home block at: " + x + " " + y);
-                    tiles[rows][cols].setTile(rows, cols, Tile.MID);
+                    tiles[rows][cols].setTile(rows, cols, Tile.TM);
                 }
                 if (r == 0 && g == 0 && b == 255) {
                     //System.out.println("Box block at: " + x + " " + y);
-                    tiles[rows][cols].setTile(rows, cols, Tile.RIGHT);
+                    tiles[rows][cols].setTile(rows, cols, Tile.TR);
                 }
+                //new blocks
+                if (r == 152 && g == 0 && b == 0) {
+                    tiles[rows][cols].setTile(rows, cols, Tile.ML);
+                }
+                if (r == 2 && g == 138 && b == 2) {
+                    tiles[rows][cols].setTile(rows, cols, Tile.MM);
+                }
+                if (r == 0 && g == 0 && b == 94) {
+                    tiles[rows][cols].setTile(rows, cols, Tile.MR);
+                }//end new blocks
                 if (r == 120 && g == 120 && b == 120) {
                     //System.out.println("Box block at: " + x + " " + y);
                     tiles[rows][cols].setTile(rows, cols, Tile.WALL);
@@ -168,6 +168,66 @@ public class World extends GameObject {
     }
 
     /**
+     * Called when setting 1001 spikes spikeBlocks
+     * 
+     * Loops though level bitmap, depending on the pixel, load a new tile
+     * of 1001 spikes type.
+     */
+    private void setNewTiles() {
+        level = Assets.level;
+        int w = level.getWidth();
+        int h = level.getHeight();
+
+        for (int cols = 0; cols < h; cols++) {
+            for (int rows = 0; rows < w; rows++) {
+                int pixel = level.getRGB(rows, cols);
+
+                int a = ((pixel & 0xff000000) >>> 24);
+                int r = ((pixel & 0x00ff0000) >>> 16);
+                int g = ((pixel & 0x0000ff00) >>> 8);
+                int b = ((pixel & 0x000000ff));
+                
+                //Id of tile at x,y
+                int id = tiles[rows][cols].getId();
+//                int id = getTileId(rows, cols);   //same line above
+                if (r == 0 && g == 0 && b == 0) {
+                    //System.out.println("Black block at: " + x + " " + y);
+                    tiles[rows][cols].loadNewImage(id);
+                }
+                //If the current pixel is grey
+                if (r == 255 && g == 0 && b == 0) {
+                    //System.out.println("Wall block at: " + x + " " + y);
+                    tiles[rows][cols].loadNewImage(id);
+                }
+                if (r == 0 && g == 255 && b == 0) {
+                    //System.out.println("Home block at: " + x + " " + y);
+                    tiles[rows][cols].loadNewImage(id);
+                }
+                if (r == 0 && g == 0 && b == 255) {
+                    //System.out.println("Box block at: " + x + " " + y);
+                    tiles[rows][cols].loadNewImage(id);
+                }
+                //new blocks
+                if (r == 152 && g == 0 && b == 0) {
+                    tiles[rows][cols].loadNewImage(id);
+                }
+                if (r == 2 && g == 138 && b == 2) {
+                    tiles[rows][cols].loadNewImage(id);
+                }
+                if (r == 0 && g == 0 && b == 94) {
+                    tiles[rows][cols].loadNewImage(id);
+                }//end new blocks
+                //wall
+                if (r == 120 && g == 120 && b == 120) {
+                    //System.out.println("Box block at: " + x + " " + y);
+                    tiles[rows][cols].loadNewImage(id);
+                }
+            }
+            //System.out.println("");
+        }
+    }
+
+    /**
      * CAN DELETE
      */
     private void setBorder() {
@@ -179,11 +239,11 @@ public class World extends GameObject {
         for (int i = 0; i < NO_OF_TILES_X; i++) {
             tiles[i][NO_OF_TILES_Y - 1].setID(Tile.WALL);
         }
-        //Sets the LEFT wall blocked
+        //Sets the TL wall blocked
         for (int i = 0; i < NO_OF_TILES_Y; i++) {
             tiles[0][i].setID(Tile.WALL);
         }
-        //Sets the RIGHT wall blocked
+        //Sets the TR wall blocked
         for (int i = 0; i < NO_OF_TILES_Y; i++) {
             tiles[NO_OF_TILES_X - 1][i].setID(Tile.WALL);
         }
@@ -203,24 +263,44 @@ public class World extends GameObject {
     }
 
     /**
-     * Gets the tile type
+     * Gets the spikeBlock type
      *
-     * @param i position of tile
-     * @param j position of tile
-     * @return id of tile
+     * @param i position of spikeBlock
+     * @param j position of spikeBlock
+     * @return id of spikeBlock
      */
+    
     public int getTileId(int i, int j) {
         return tiles[i][j].getId();
     }
 
     /**
-     * Gets the actual tile (if another class needs to access a tile)
+     * Gets the actual spikeBlock (if another class needs to access a
+     * spikeBlock)
+     *
      * @param i
      * @param j
-     * @return 
+     * @return
      */
     public Tile getTile(int i, int j) {
         return tiles[i][j];
+    }
+
+    public void handleInput() {
+        //Hitbox
+        if (Input.isKeyTyped(KeyEvent.VK_X)) {
+            renderMode = HITBOX_MODE;
+        }
+        //Mario
+        if (Input.isKeyTyped(KeyEvent.VK_C)) {
+            renderMode = BITMAP_MODE;
+            loadLevel();
+        }
+        //1001 Spikes
+        if (Input.isKeyTyped(KeyEvent.VK_V)) {
+            renderMode = BITMAP_MODE;
+            setNewTiles();
+        }
     }
 
     /**
@@ -229,7 +309,7 @@ public class World extends GameObject {
     @Override
     void gameUpdate(float deltaTime) {
         //If im moving any of the world tiles
-//        System.out.println("tile: "+tiles[3][10].hitbox);
+//        System.out.println("spikeBlock: "+tiles[3][10].hitbox);
 //        tiles[15][NO_OF_TILES_Y-1].y -=4;
     }
 
@@ -242,48 +322,94 @@ public class World extends GameObject {
     void gameRender(Graphics2D g) {
         /* Called every frame */
 
+        switch (renderMode) {
+            case HITBOX_MODE:
+                drawHitbox(g);
+                break;
+            case BITMAP_MODE:
+                drawRender(g);
+                break;
+//            case BITMAP_SPIKE_MODE:
+//                drawSpikeRender(g);
+//                break;
+        }
+    }
+
+    private void drawHitbox(Graphics2D g) {
         //NAIVE, renders all tiles (including off screen tiles)
         for (int i = 0; i < NO_OF_TILES_X; i++) {
             for (int j = 0; j < NO_OF_TILES_Y; j++) {
-
-                //if tile is empty -> SKIP CURRENT ITERATION
+                //--USE SWITCH--
+                //If spikeBlock is empty -> SKIP CURRENT ITERATION
                 if (tiles[i][j].getId() == Tile.EMPTY) {
                     continue;
                 }
-                //Depending on whats on the tile, choose appropriate color to render
+                //Depending on whats on the spikeBlock, choose appropriate color to render
                 if (tiles[i][j].getId() == Tile.WALL) {
                     g.setColor(Color.GRAY);
-//                    g.fillRect(tiles[i][j].x +xShift, tiles[i][j].y + yShift, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
                     g.drawRect(tiles[i][j].x + xShift, tiles[i][j].y + yShift, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-
-//                    g.drawImage(tiles[i][j].tileImg, tiles[i][j].x + xShift,
-//                            tiles[i][j].y + yShift, null);
-                } else if (tiles[i][j].getId() == Tile.LEFT) {
+                } else if (tiles[i][j].getId() == Tile.TL) {
                     g.setColor(Color.GREEN);
-//                    g.fillRect(i * TILE_WIDTH + xShift, j * TILE_HEIGHT + yShift, TILE_WIDTH - 1, TILE_HEIGHT - 1);
                     g.drawRect(tiles[i][j].x + xShift, tiles[i][j].y + yShift, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-
-//                    g.drawImage(tiles[i][j].tileImg, tiles[i][j].x + xShift,
-//                            tiles[i][j].y + yShift, null);
-                } else if (tiles[i][j].getId() == Tile.MID) {
+                } else if (tiles[i][j].getId() == Tile.TM) {
                     g.setColor(Color.GREEN);
-
-//                    g.fillRect(i * TILE_WIDTH + xShift, j * TILE_HEIGHT +yShift, TILE_WIDTH-1, TILE_HEIGHT-1);
                     g.drawRect(tiles[i][j].x + xShift, tiles[i][j].y + yShift, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-
-//                    g.drawImage(tiles[i][j].tileImg, tiles[i][j].x + xShift,
-//                            tiles[i][j].y + yShift, null);
-                } else if (tiles[i][j].getId() == Tile.RIGHT) {
+                } else if (tiles[i][j].getId() == Tile.TR) {
                     g.setColor(Color.GREEN);
-//                    g.fillRect(i * TILE_WIDTH +xShift, j * TILE_HEIGHT + yShift, TILE_WIDTH-1, TILE_HEIGHT-1);
                     g.drawRect(tiles[i][j].x + xShift, tiles[i][j].y + yShift, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-
-//                    g.drawImage(tiles[i][j].tileImg, tiles[i][j].x + xShift,
-//                            tiles[i][j].y + yShift, null);
+                } else if (tiles[i][j].getId() == Tile.ML) {
+                    g.setColor(Color.GREEN);
+                    g.drawRect(tiles[i][j].x + xShift, tiles[i][j].y + yShift, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
+                } else if (tiles[i][j].getId() == Tile.MM) {
+                    g.setColor(Color.GREEN);
+                    g.drawRect(tiles[i][j].x + xShift, tiles[i][j].y + yShift, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
+                } else if (tiles[i][j].getId() == Tile.MR) {
+                    g.setColor(Color.GREEN);
+                    g.drawRect(tiles[i][j].x + xShift, tiles[i][j].y + yShift, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
                 }
-
             }
         }
     }
 
+    private void drawRender(Graphics2D g) {
+        //NAIVE, renders all tiles (including off screen tiles)
+        for (int i = 0; i < NO_OF_TILES_X; i++) {
+            for (int j = 0; j < NO_OF_TILES_Y; j++) {
+                //If spikeBlock is empty -> SKIP CURRENT ITERATION
+                if (tiles[i][j].getId() == Tile.EMPTY) {
+                    continue;
+                }
+                //Depending on whats on the spikeBlock, choose appropriate color to render
+                if (tiles[i][j].getId() == Tile.WALL) {
+                    g.setColor(Color.GRAY);
+                    g.drawImage(tiles[i][j].tileImg, tiles[i][j].x + xShift,
+                            tiles[i][j].y + yShift, null);
+                } else if (tiles[i][j].getId() == Tile.TL) {
+                    g.setColor(Color.GREEN);
+                    g.drawImage(tiles[i][j].tileImg, tiles[i][j].x + xShift,
+                            tiles[i][j].y + yShift, null);
+                } else if (tiles[i][j].getId() == Tile.TM) {
+                    g.setColor(Color.GREEN);
+                    g.drawImage(tiles[i][j].tileImg, tiles[i][j].x + xShift,
+                            tiles[i][j].y + yShift, null);
+                } else if (tiles[i][j].getId() == Tile.TR) {
+                    g.setColor(Color.GREEN);
+                    g.drawImage(tiles[i][j].tileImg, tiles[i][j].x + xShift,
+                            tiles[i][j].y + yShift, null);
+                } else if (tiles[i][j].getId() == Tile.ML) {
+                    g.setColor(Color.GREEN);
+                    g.drawImage(tiles[i][j].tileImg, tiles[i][j].x + xShift,
+                            tiles[i][j].y + yShift, null);
+                } else if (tiles[i][j].getId() == Tile.MM) {
+                    g.setColor(Color.GREEN);
+                    g.drawImage(tiles[i][j].tileImg, tiles[i][j].x + xShift,
+                            tiles[i][j].y + yShift, null);
+                } else if (tiles[i][j].getId() == Tile.MR) {
+                    g.setColor(Color.GREEN);
+                    g.drawImage(tiles[i][j].tileImg, tiles[i][j].x + xShift,
+                            tiles[i][j].y + yShift, null);
+                }
+            }
+        }
+    }
 }

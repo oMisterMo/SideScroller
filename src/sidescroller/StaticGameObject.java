@@ -1,12 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package sidescroller;
 
 import java.awt.Graphics2D;
+import common.Vector2D;
 
 /**
  * 05-Feb-2017, 18:54:47.
