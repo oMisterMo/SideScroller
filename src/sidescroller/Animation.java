@@ -3,7 +3,9 @@ package sidescroller;
 import java.awt.image.BufferedImage;
 
 /**
- * Created by Mo on 14/03/2016.
+ * 14/03/2016.
+ * 
+ * @author Mo
  */
 public class Animation {
 

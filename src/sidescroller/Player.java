@@ -10,16 +10,24 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import common.Vector2D;
 import common.Helper;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
+ * Represents a player within our game world
+ *
+ * 32 pixels = 1 meter
+ *
  * 07-Sep-2016, 01:56:02.
  *
  * @author Mo
  */
 public class Player extends DynamicGameObject {
 
+    public static final float PLAYER_WIDTH = 28;    //32
+    public static final float PLAYER_HEIGHT = 28;   //32
     //Player states
-    //All states out player can be in -> Different animation for each playerState
+    //All states out playerMo can be in -> Different animation for each playerState
     public static final int STATE_IDLE = 0;
     public static final int STATE_WALK = 1;
     public static final int STATE_RUN = 2;
@@ -30,20 +38,16 @@ public class Player extends DynamicGameObject {
     public static final int STATE_CLIMB = 7;
     public static final int STATE_HURT = 8;
     public static final int STATE_DEAD = 9;
-    public static int playerState = STATE_FALLING;
+    public int playerState = STATE_FALLING;
 
-    //MovementStates
-    private static final int mulSpeed = 200;
-
-    private static final int WALK_SPEED = 150;    //x
-    private static final int RUN_SPEED = 200;    //x
-//    private static final int FALL_SPEED = 25;   //y
-    private static final int JUMP_HEIGHT = 340;
-    private static final int FALL_ACEL = 800;    //10 m/s
+    //MovementStates    ( * 32 pixels = 1 meter)
+    private static final int TERMINAL_VELOCITY = 200;   //6.25 m/s
+    private static final int WALK_SPEED = 150;          //x
+    private static final int RUN_SPEED = 200;           //x
+    private static final int JUMP_HEIGHT = 380;         //y impulse
+//    private static final int FALL_ACEL = 800;         //10 m/s
 
     private World world;
-    private BufferedImage playerImg;    //player.png (hence mo)
-
     private SpriteSheet playerSheet;
     private Animation idle;
     private Animation idle2;
@@ -52,18 +56,14 @@ public class Player extends DynamicGameObject {
     private boolean facingRight = true;
     private int idleCounter = 0;
 
-//From dynamic game object
-//    public Vector2D position;
-//    public Vector2D velocity;
-//    private Vector2D acceleration;
-//    private float width;
-//    private float height;
-    public Rectangle.Float playerHitbox;  //outter blue hitbox
+    //public Rectangle.Float bounds;  //outter blue hitbox
     private Rectangle.Float leftHitbox;
     private Rectangle.Float rightHitbox;
     private Rectangle.Float topHitbox;
-    private Rectangle.Float bottomHitbox;
+    public Rectangle.Float bottomHitbox;
     public boolean grounded = false;
+
+    private List<Fireball> fireball;
 
     //For debugging****************************
     private Font f;
@@ -72,28 +72,30 @@ public class Player extends DynamicGameObject {
     private String state_debug = "FALLING";
     private int numOfCollision = 0;
 
-    public Player(World world) {
+    public Player(float x, float y, float width, float height, World world) {
+        super(x, y, width, height);
+//        position.set(x, y);
         this.world = world;
 
         loadImages();
         initAnimations();
-        setPlayerSize();
+//        setPlayerSize();  // I think I do not need
 
         //Current the position is the hitbox
-        position = new Vector2D(150, GamePanel.GAME_HEIGHT - Tile.TILE_HEIGHT * 2 - 80);
-        velocity = new Vector2D(0, 0);
-        acceleration = new Vector2D(0, FALL_ACEL);
-
-        playerHitbox = new Rectangle.Float(position.x,
-                position.y,
-                width,
-                height);
+//        position = new Vector2D(150, GamePanel.GAME_HEIGHT - Tile.TILE_HEIGHT * 2 - 80);
+//        velocity = new Vector2D(0, 0);
+//        acceleration = new Vector2D(0, FALL_ACEL);
+//        bounds = new Rectangle.Float(150,
+//                GamePanel.GAME_HEIGHT - Tile.TILE_HEIGHT * 2 - 80,
+//                width,
+//                height);
+//        acceleration.set(0, FALL_ACEL);   //Using worlds gravity now!!!
         initInnerHitbox();
         initFont();
+        fireball = new ArrayList<>(5);
     }
 
     private void loadImages() {
-        this.playerImg = Assets.player;
         this.playerSheet = new SpriteSheet(Assets.playerSheet);
     }
 
@@ -150,10 +152,10 @@ public class Player extends DynamicGameObject {
 //        //testing different widths and innerhitbox size
 //        width = 20;
 //        height = 20;
-        width = playerImg.getWidth();
-        height = playerImg.getHeight();
-        System.out.println("player width: " + width);
-        System.out.println("player height: " + height);
+//        width = playerMo.getWidth();
+//        height = playerMo.getHeight();
+//        System.out.println("player width: " + width);
+//        System.out.println("player height: " + height);
     }
 
     private void initInnerHitbox() {
@@ -180,31 +182,100 @@ public class Player extends DynamicGameObject {
                 + rightHitbox.intersects(leftHitbox));
     }
 
-    private void updateInnerHitbox() {
+//    public void updateInnerHitbox() {
+//        //create inner hitbox to determin left, right top bottom collision
+//        float w = bounds.width / 4;
+//        float h = bounds.height / 2;
+//
+//        //RED
+//        topHitbox.x = (bounds.x + bounds.width / 2) - (w);
+//        topHitbox.y = bounds.y;
+//        topHitbox.width = w * 2;
+//        topHitbox.height = h / 2;
+//        //WHITE
+//        bottomHitbox.x = (bounds.x + bounds.width / 2) - (w);
+//        bottomHitbox.y = bounds.y + h + h / 2;
+//        bottomHitbox.width = w * 2;
+//        bottomHitbox.height = h / 2;
+//        //YELLOW
+//        leftHitbox.x = topHitbox.x - w;
+//        leftHitbox.y = bounds.y + h / 2;
+//        leftHitbox.width = w;
+//        leftHitbox.height = h;
+//        //DARK GRAY
+//        rightHitbox.x = topHitbox.x + w * 2;
+//        rightHitbox.y = bounds.y + h / 2;
+//        rightHitbox.width = w;
+//        rightHitbox.height = h;
+//    }
+//    public void updateInnerHitbox() {
+//        //create inner hitbox to determin left, right top bottom collision
+//        float w = bounds.width / 4;
+//        float h = bounds.height / 2;
+//
+//        //RED
+//        topHitbox.x = (bounds.x + bounds.width / 2) - (w);
+//        topHitbox.y = bounds.y;
+//        topHitbox.width = w * 2;
+//        topHitbox.height = h / 2;
+//        //WHITE
+//        bottomHitbox.x = (bounds.x + bounds.width / 2) - (w * 3) / 2;
+//        bottomHitbox.y = bounds.y + h + h / 2;
+//        bottomHitbox.width = w * 3;
+//        bottomHitbox.height = h / 2;
+//        //YELLOW
+//        leftHitbox.x = topHitbox.x - w;
+//        leftHitbox.y = bounds.y + h / 2;
+//        leftHitbox.width = w;
+//        leftHitbox.height = h;
+//        //GREEN
+//        rightHitbox.x = topHitbox.x + w * 2;
+//        rightHitbox.y = bounds.y + h / 2;
+//        rightHitbox.width = w;
+//        rightHitbox.height = h;
+//    }
+    public void updateInnerHitbox() {
         //create inner hitbox to determin left, right top bottom collision
-        float w = playerHitbox.width / 4;
-        float h = playerHitbox.height / 2;
+        float w = bounds.width / 4;
+        float h = bounds.height / 2;
 
-        //RED
-        topHitbox.x = (playerHitbox.x + playerHitbox.width / 2) - (w);
-        topHitbox.y = playerHitbox.y;
+//        //RED
+        topHitbox.x = (bounds.x + bounds.width / 2) - (w);
+        topHitbox.y = bounds.y;
         topHitbox.width = w * 2;
         topHitbox.height = h / 2;
         //WHITE
-        bottomHitbox.x = (playerHitbox.x + playerHitbox.width / 2) - (w);
-        bottomHitbox.y = playerHitbox.y + h + h / 2;
-        bottomHitbox.width = w * 2;
+        bottomHitbox.x = (bounds.x + bounds.width / 2) - (w * 3) / 2;
+        bottomHitbox.y = bounds.y + bounds.height - h / 2;
+        bottomHitbox.width = w * 3;
         bottomHitbox.height = h / 2;
         //YELLOW
-        leftHitbox.x = topHitbox.x - w;
-        leftHitbox.y = playerHitbox.y + h / 2;
+//        System.out.println("old: " + ((bounds.x + bounds.width / 2) - w - w));
+//        System.out.println("new: " + bounds.x);
+        leftHitbox.x = bounds.x;
+        leftHitbox.y = bounds.y + h / 2;
         leftHitbox.width = w;
         leftHitbox.height = h;
-        //DARK GRAY
-        rightHitbox.x = topHitbox.x + w * 2;
-        rightHitbox.y = playerHitbox.y + h / 2;
+        //GREEN
+//        System.out.println("old: "+((bounds.x + bounds.width / 2) - w + w * 2));
+//        System.out.println("nes: "+((bounds.x + bounds.width) - leftHitbox.width));
+        rightHitbox.x = (bounds.x + bounds.width) - leftHitbox.width;
+        rightHitbox.y = bounds.y + h / 2;
         rightHitbox.width = w;
         rightHitbox.height = h;
+    }
+
+    private void updateFireballs(float deltaTime) {
+        int size = fireball.size();
+        Fireball ball;
+        for (int i = 0; i < size; i++) {
+            ball = fireball.get(i);
+            ball.gameUpdate(deltaTime);
+            if (ball.isDead()) {
+                fireball.remove(ball);
+                size = fireball.size();
+            }
+        }
     }
 
     private void initFont() {
@@ -215,92 +286,13 @@ public class Player extends DynamicGameObject {
         stroke = new BasicStroke(1);
     }
 
-//    public void keyPressed(KeyEvent e) {
-//        int key = e.getKeyCode();
-//
-//        if (key == KeyEvent.VK_A) {
-////            playerState = STATE_WALK;
-//
-////            //walk with acceleration
-////            if(velocity.x > 0){
-////                velocity.x -= WALK_SPEED;
-////            }else if(velocity.x > -WALK_SPEED){ //walk_speed = 200
-////                velocity.x -= 150;
-////            }
-//            velocity.x = -WALK_SPEED;
-////            System.out.println("vel.x: " + velocity.x);
-//            System.out.println("TL-held");
-//        }
-//
-//        if (key == KeyEvent.VK_D) {
-////            playerState = STATE_WALK;
-//
-////            //walk with acceleration
-////            if(velocity.x < 0){
-////                velocity.x += WALK_SPEED;
-////            }else if(velocity.x < WALK_SPEED){
-////                velocity.x += 150;
-////            }
-//            velocity.x = WALK_SPEED;
-////            System.out.println("vel.x: " + velocity.x);
-//            System.out.println("TR-held");
-//        }
-//
-//        if (key == KeyEvent.VK_W) {
-////            playerState = STATE_JUMP;
-////            velocity.y = -WALK_SPEED;
-////            System.out.println("vel.y: " + velocity.y);
-//        }
-//
-//        if (key == KeyEvent.VK_S) {
-////            velocity.y = WALK_SPEED;
-////            System.out.println("vel.y: " + velocity.y);
-//        }
-//
-//        if (key == KeyEvent.VK_SPACE) {
-////            System.out.println("JUMP");
-////            grav = true;
-//            if (grounded) {
-//                playerState = STATE_JUMP;
-//                velocity.y = -JUMP_HEIGHT;  //impulse up
-//                grounded = false;
-//            }
-//        }
-//    }
-//
-//    public void keyReleased(KeyEvent e) {
-//        int key = e.getKeyCode();
-////        System.out.println("Letgo");
-//        if (key == KeyEvent.VK_A) {
-//            velocity.x = 0;//set friction rate insted
-//        }
-//
-//        if (key == KeyEvent.VK_D) {
-////            playerState = STATE_IDLE;
-//            velocity.x = 0;//set friction rate insted
-//
-////            System.out.println("vel.x: " + velocity.x);
-//        }
-//        if (key == KeyEvent.VK_W || key == KeyEvent.VK_S) {
-////            playerState = STATE_IDLE;
-//            velocity.y = 0;
-////            System.out.println("vel.y: " + velocity.y);
-//        }
-//
-//        if (key == KeyEvent.VK_SPACE) {
-////            System.out.println("Release JUMP");
-//            playerState = STATE_FALLING;
-//
-//            //If player is on up jump arch
-//            if (velocity.y < 0) {
-//                velocity.y *= 0.5;
-//            }
-//        }
-//    }
     public void setGrounded(boolean val) {
 //        this.grounded = val;
     }
 
+    /**
+     * Loop through every single tile
+     */
     private void collision_one() {
         /*
          1.Detect if larger hitbox intercepts a spikeBlock
@@ -308,52 +300,82 @@ public class Player extends DynamicGameObject {
          */
 
         //Goes through every spikeBlock in the game (NOT GOOD)
-        for (int j = 0; j < World.NO_OF_TILES_Y; j++) {
-            for (int i = 0; i < World.NO_OF_TILES_X; i++) {
-                Tile t = world.getTile(i, j);
+        for (int y = 0; y < World.NO_OF_TILES_Y; y++) {
+            for (int x = 0; x < World.NO_OF_TILES_X; x++) {
+                Tile t = world.getTile(x, y);
                 if (t.solid) {
                     //If we have a solid spikeBlock
                     numOfCollision++;
-                    if (playerHitbox.intersects(t.hitbox)) {
+                    System.out.println(numOfCollision); //Make it average per secondt 
+                    if (bounds.intersects(t.bounds)) {
                         //Check inner hitbox for collision and respond
-                        doInnerColCheck(t.hitbox);
+                        doInnerColCheck(t.bounds);
                     }
                 }
             }
         }//end outer for loop
     }
 
-    private void doInnerColCheck(Rectangle wall) {
+    /**
+     * Loop through list of solid tiles
+     */
+    private void collision_two() {
+
+    }
+
+    /**
+     * Loop through whats visible to the camera(+1) only
+     */
+    private void collision_three() {
+
+    }
+
+    public void doInnerColCheck(Rectangle.Float wall) {
 //        System.out.println("inner");
         //top
         if (topHitbox.intersects(wall)) {
 //            System.out.println("top");
             velocity.y = 0;
-            playerHitbox.y = wall.y + wall.height;
+            bounds.y = wall.y + wall.height;
         }
         //left
         if (leftHitbox.intersects(wall)) {
 //            System.out.println("left");
-//            velocity.x = 0;
-            playerHitbox.x = wall.x + wall.width - 2f;   //could remove the 2's
+            velocity.x = 0;
+            bounds.x = wall.x + wall.width + 1;   //could remove the 2's
         }
         //right
         if (rightHitbox.intersects(wall)) {
 //            System.out.println("right");
-//            velocity.x = 0;
-            playerHitbox.x = wall.x - playerHitbox.width + 2; //removes the 2's
+            velocity.x = 0;
+            bounds.x = wall.x - bounds.width - 1; //removes the 2's
         }
         //bottom
+//        Tile botLeft = worldToTile(bottomHitbox.x, bottomHitbox.y);
+//        Tile botRight = worldToTile(bottomHitbox.x + bottomHitbox.width, bottomHitbox.y);
+//        if (!botLeft.solid && !botRight.solid) {
+//            grounded = false;
+//        }
         if (bottomHitbox.intersects(wall)) {
+            if (velocity.y > 0) {
 //            System.out.println("bot");
-            grounded = true;
-            velocity.y = 0;
-            playerHitbox.y = wall.y - playerHitbox.height;
+                grounded = true;
+                velocity.y = 0;
+                bounds.y = wall.y - bounds.height;
+//            Camera.cameraState = Camera.STATE_SHAKE;
+            } else {
+                System.out.println("NOO, IM MOVING UP, do not snap me pls");
+            }
         }
     }
 
-    public void handleInput() {
+    private Tile worldToTile(float x, float y) {
+        System.out.println((int) Math.floor(x / Tile.TILE_WIDTH));
+        System.out.println((int) Math.floor(y / Tile.TILE_WIDTH));
+        return world.getTile((int) Math.floor(x / Tile.TILE_WIDTH), (int) Math.floor(y / Tile.TILE_WIDTH));
+    }
 
+    public void handleInput() {
         //Walk input
         if (Input.isKeyPressed(KeyEvent.VK_A)) {
             facingRight = false;
@@ -394,7 +416,7 @@ public class Player extends DynamicGameObject {
 
         //Testing jump code here
         if (Input.isKeyTyped(KeyEvent.VK_SPACE)) {
-            System.out.println("JUMP!");
+//            System.out.println("JUMP!");
             if (grounded) {
                 playerState = STATE_JUMP;
                 velocity.y = -JUMP_HEIGHT;  //impulse up
@@ -412,24 +434,32 @@ public class Player extends DynamicGameObject {
             }
         }
 
-//        //make run
-//        if (Input.isKeyPressed(KeyEvent.VK_M)) {
-//            playerState = STATE_RUN;
-//            if (facingRight) {
-//                velocity.x = RUN_SPEED;
-//            } else {
-//                velocity.x = -RUN_SPEED;
-//            }
-////            velocity.x = Helper.Clamp(velocity.x, -RUN_SPEED, RUN_SPEED);
-//        }
-        //Jump code was here...
+        //create firball
+        if (Input.isKeyTyped(KeyEvent.VK_B)) {
+            if (fireball.size() < 5) {
+                //Do I need a add a new instance? object pool?
+                fireball.add(new Fireball(bounds.x, bounds.y, 32, 32, facingRight));
+            }
+        }
     }
 
     /**
-     * ************UPDATE & RENDER**************
+     * ************UPDATE & RENDER
+     *
+     **************
+     * @param deltaTime
      */
     @Override
-    void gameUpdate(float deltaTime) {
+    public void gameUpdate(float deltaTime) {
+        //Move player otter hitbox
+        position.add(velocity.x * deltaTime, velocity.y * deltaTime);
+        bounds.x += (velocity.x * deltaTime);
+        bounds.y += (velocity.y * deltaTime);
+
+//        //Handle collision AFTER we commit our movement
+//        //Update players inner hitbox
+        updateInnerHitbox();
+
         //If player is not on the ground, he is falling
         if (!grounded) {
             playerState = STATE_FALLING;
@@ -437,8 +467,8 @@ public class Player extends DynamicGameObject {
         //Apply gravity if player is falling or jumping
         if (playerState == STATE_FALLING || playerState == STATE_JUMP) {
             //velocity never faster than 25m/s
-            velocity.y += acceleration.y * deltaTime;
-            velocity.y = Helper.Clamp(velocity.y, -mulSpeed * 3, mulSpeed * 3);
+            velocity.y += World.gravity.y * deltaTime;
+            velocity.y = Helper.Clamp(velocity.y, -TERMINAL_VELOCITY * 3, TERMINAL_VELOCITY * 3);
         }
 
         switch (playerState) {
@@ -461,17 +491,13 @@ public class Player extends DynamicGameObject {
                 idleCounter = 0;
                 jump.update(deltaTime);
                 break;
+            case STATE_DEAD:
+                break;
         }
-        //->collision_one() was here
 
-        //Move player otter hitbox
-        playerHitbox.x += (velocity.x * deltaTime);
-        playerHitbox.y += (velocity.y * deltaTime);
-
-        //Handle collision AFTER we commit our movement
-        collision_one();
-        //Update players inner hitbox
-        updateInnerHitbox();
+//        collision_one();
+        //Update firballs
+        updateFireballs(deltaTime);
     }
 
     @Override
@@ -485,19 +511,20 @@ public class Player extends DynamicGameObject {
             case World.BITMAP_MODE:
                 drawRender(g);
                 break;
-//            case BITMAP_SPIKE_MODE:
-//                drawSpikeRender(g);
-//                break;
+        }
+        //Draw fireballs
+        int size = fireball.size();
+        for (int i = 0; i < size; i++) {
+            fireball.get(i).gameRender(g);
         }
     }
 
     private void drawHitbox(Graphics2D g) {
-        //Draw playerHitbox
+        //Draw bounds
         g.setColor(Color.BLUE);
-        g.draw(playerHitbox);
+        g.draw(bounds);
 
-//        drawInfo(g);
-        //Draw all hit boxes
+        //Draw inner hit boxes
         g.setColor(Color.ORANGE);
         g.fill(leftHitbox);
         g.setColor(Color.GREEN);
@@ -509,53 +536,58 @@ public class Player extends DynamicGameObject {
     }
 
     private void drawRender(Graphics2D g) {
-        //Draw player
+        //Draw playerMo
         switch (playerState) {
             case STATE_IDLE:
-                //If player is idle for more than 3 seconds, draw idle2
+                //If playerMo is idle for more than 3 seconds, draw idle2
                 if (idleCounter > 3000) {
-                    g.drawImage(idle2.getImage(), (int) playerHitbox.x, (int) playerHitbox.y, null);
+                    g.drawImage(idle2.getImage(), (int) bounds.x, (int) bounds.y,
+                            (int) bounds.width, (int) bounds.height, null);
                 } else {
                     //Otherwise draw normal idle animation
                     if (facingRight) {
-                        g.drawImage(idle.getImage(), (int) playerHitbox.x + 32, (int) playerHitbox.y,
-                                -(int) playerHitbox.width, (int) playerHitbox.height, null);
+                        g.drawImage(idle.getImage(), (int) (bounds.x + bounds.width), (int) bounds.y,
+                                -(int) bounds.width, (int) bounds.height, null);
                     } else {
-                        g.drawImage(idle.getImage(), (int) playerHitbox.x, (int) playerHitbox.y,
-                                (int) playerHitbox.width, (int) playerHitbox.height, null);
+                        g.drawImage(idle.getImage(), (int) bounds.x, (int) bounds.y,
+                                (int) bounds.width, (int) bounds.height, null);
                     }
                 }
                 break;
             case STATE_WALK:
                 if (facingRight) {
-                    g.drawImage(walk.getImage(), (int) playerHitbox.x + 32, (int) playerHitbox.y,
-                            -(int) playerHitbox.width, (int) playerHitbox.height, null);
+                    g.drawImage(walk.getImage(), (int) (bounds.x + bounds.width), (int) bounds.y,
+                            -(int) bounds.width, (int) bounds.height, null);
                 } else {
-                    g.drawImage(walk.getImage(), (int) playerHitbox.x, (int) playerHitbox.y,
-                            (int) playerHitbox.width, (int) playerHitbox.height, null);
+                    g.drawImage(walk.getImage(), (int) bounds.x, (int) bounds.y,
+                            (int) bounds.width, (int) bounds.height, null);
                 }
                 break;
             case STATE_RUN:
                 if (facingRight) {
-                    g.drawImage(walk.getImage(), (int) playerHitbox.x + 32, (int) playerHitbox.y,
-                            -(int) playerHitbox.width, (int) playerHitbox.height, null);
+                    g.drawImage(walk.getImage(), (int) (bounds.x + bounds.width), (int) bounds.y,
+                            -(int) bounds.width, (int) bounds.height, null);
                 } else {
-                    g.drawImage(walk.getImage(), (int) playerHitbox.x, (int) playerHitbox.y,
-                            (int) playerHitbox.width, (int) playerHitbox.height, null);
+                    g.drawImage(walk.getImage(), (int) bounds.x, (int) bounds.y,
+                            (int) bounds.width, (int) bounds.height, null);
                 }
                 break;
             case STATE_JUMP:
             case STATE_FALLING:
                 if (facingRight) {
-                    g.drawImage(jump.getImage(), (int) playerHitbox.x + 32, (int) playerHitbox.y,
-                            -(int) playerHitbox.width, (int) playerHitbox.height, null);
+                    g.drawImage(jump.getImage(), (int) (bounds.x + bounds.width), (int) bounds.y,
+                            -(int) bounds.width, (int) bounds.height, null);
                 } else {
-                    g.drawImage(jump.getImage(), (int) playerHitbox.x, (int) playerHitbox.y,
-                            (int) playerHitbox.width, (int) playerHitbox.height, null);
+                    g.drawImage(jump.getImage(), (int) bounds.x, (int) bounds.y,
+                            (int) bounds.width, (int) bounds.height, null);
                 }
                 break;
+            case STATE_DEAD:
+                g.drawOval((int) bounds.x, (int) bounds.y,
+                            (int) bounds.width, (int) bounds.height);
+                break;
         }
-//        g.drawImage(playerImg, (int) playerHitbox.x, (int) playerHitbox.y, null);
+//        g.drawImage(playerImg, (int) bounds.x, (int) bounds.y, null);
     }
 
     public void drawInfo(Graphics2D g) {
@@ -563,10 +595,10 @@ public class Player extends DynamicGameObject {
         g.setFont(f);
 //        g.drawString("Draw REAL POS", fontPos.x, fontPos.y);
 //        g.drawString("Pos: " + String.valueOf(position), fontPos.x, fontPos.y);
-        g.drawString("Pos: " + "x: " + (int) playerHitbox.x + ", y: " + (int) playerHitbox.y, fontPos.x, fontPos.y);
+        g.drawString("Pos: " + "x: " + (int) bounds.x + ", y: " + (int) bounds.y, fontPos.x, fontPos.y);
         g.drawString("Vel: " + String.valueOf(velocity), fontPos.x, fontPos.y + 35);
-        g.drawString("Acc: " + String.valueOf(acceleration), fontPos.x, fontPos.y + 65);
-        //draw player state
+        g.drawString("Acc: " + String.valueOf(World.gravity), fontPos.x, fontPos.y + 65);
+        //draw playerMo state
         switch (playerState) {
             case STATE_IDLE:
                 state_debug = "IDLE";

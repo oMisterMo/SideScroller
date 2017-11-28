@@ -9,18 +9,21 @@ import common.Vector2D;
  *
  * @author Mo
  */
-abstract class DynamicGameObject extends GameObject{
+public class DynamicGameObject extends StaticGameObject{//EXTEND StaticGameObject
 
     //Add other members
-    protected Vector2D position;
+    //protected Vector2D position;
     protected Vector2D acceleration;
     protected Vector2D velocity;
     
-//    protected Vector2D friction;//?
-    
-    //int or float?
-    protected float width;
-    protected float height;
-    
-    
+    public DynamicGameObject(float x, float y, float width, float height){
+        super(x, y, width, height);
+        acceleration = new Vector2D();
+        velocity = new Vector2D();
+    }
+//    public DynamicGameObject(float x, float y, float width, float height, World world){
+//        super(x, y, width, height);
+//        acceleration = new Vector2D();
+//        velocity = new Vector2D();
+//    }
 }

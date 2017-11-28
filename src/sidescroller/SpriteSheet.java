@@ -19,7 +19,6 @@ import javax.imageio.ImageIO;
 public class SpriteSheet {
     
     private  BufferedImage spriteSheet; //make static???
-    
     public SpriteSheet(BufferedImage image){
         this.spriteSheet = image;
     }
