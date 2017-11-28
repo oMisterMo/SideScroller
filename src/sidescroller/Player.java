@@ -23,7 +23,6 @@ import java.util.List;
  * @author Mo
  */
 public class Player extends DynamicGameObject {
-
     public static final float PLAYER_WIDTH = 28;    //32
     public static final float PLAYER_HEIGHT = 28;   //32
     //Player states
@@ -47,8 +46,6 @@ public class Player extends DynamicGameObject {
     private static final int JUMP_HEIGHT = 380;         //y impulse
 //    private static final int FALL_ACEL = 800;         //10 m/s
 
-    private World world;
-    private SpriteSheet playerSheet;
     private Animation idle;
     private Animation idle2;
     private Animation walk;
@@ -72,34 +69,17 @@ public class Player extends DynamicGameObject {
     private String state_debug = "FALLING";
     private int numOfCollision = 0;
 
-    public Player(float x, float y, float width, float height, World world) {
+    public Player(float x, float y, float width, float height) {
         super(x, y, width, height);
-//        position.set(x, y);
-        this.world = world;
-
-        loadImages();
         initAnimations();
-//        setPlayerSize();  // I think I do not need
 
-        //Current the position is the hitbox
-//        position = new Vector2D(150, GamePanel.GAME_HEIGHT - Tile.TILE_HEIGHT * 2 - 80);
-//        velocity = new Vector2D(0, 0);
-//        acceleration = new Vector2D(0, FALL_ACEL);
-//        bounds = new Rectangle.Float(150,
-//                GamePanel.GAME_HEIGHT - Tile.TILE_HEIGHT * 2 - 80,
-//                width,
-//                height);
-//        acceleration.set(0, FALL_ACEL);   //Using worlds gravity now!!!
         initInnerHitbox();
         initFont();
         fireball = new ArrayList<>(5);
     }
 
-    private void loadImages() {
-        this.playerSheet = new SpriteSheet(Assets.playerSheet);
-    }
-
     private void initAnimations() {
+        SpriteSheet playerSheet = new SpriteSheet(Assets.playerSheet);
         //init walk animation
         int numOfFrames = 9;
         BufferedImage[] testImage = new BufferedImage[numOfFrames];    //can delete
@@ -148,16 +128,6 @@ public class Player extends DynamicGameObject {
         jump.setDelay(200);
     }
 
-    private void setPlayerSize() {
-//        //testing different widths and innerhitbox size
-//        width = 20;
-//        height = 20;
-//        width = playerMo.getWidth();
-//        height = playerMo.getHeight();
-//        System.out.println("player width: " + width);
-//        System.out.println("player height: " + height);
-    }
-
     private void initInnerHitbox() {
         //RED
         topHitbox = new Rectangle.Float();
@@ -182,58 +152,6 @@ public class Player extends DynamicGameObject {
                 + rightHitbox.intersects(leftHitbox));
     }
 
-//    public void updateInnerHitbox() {
-//        //create inner hitbox to determin left, right top bottom collision
-//        float w = bounds.width / 4;
-//        float h = bounds.height / 2;
-//
-//        //RED
-//        topHitbox.x = (bounds.x + bounds.width / 2) - (w);
-//        topHitbox.y = bounds.y;
-//        topHitbox.width = w * 2;
-//        topHitbox.height = h / 2;
-//        //WHITE
-//        bottomHitbox.x = (bounds.x + bounds.width / 2) - (w);
-//        bottomHitbox.y = bounds.y + h + h / 2;
-//        bottomHitbox.width = w * 2;
-//        bottomHitbox.height = h / 2;
-//        //YELLOW
-//        leftHitbox.x = topHitbox.x - w;
-//        leftHitbox.y = bounds.y + h / 2;
-//        leftHitbox.width = w;
-//        leftHitbox.height = h;
-//        //DARK GRAY
-//        rightHitbox.x = topHitbox.x + w * 2;
-//        rightHitbox.y = bounds.y + h / 2;
-//        rightHitbox.width = w;
-//        rightHitbox.height = h;
-//    }
-//    public void updateInnerHitbox() {
-//        //create inner hitbox to determin left, right top bottom collision
-//        float w = bounds.width / 4;
-//        float h = bounds.height / 2;
-//
-//        //RED
-//        topHitbox.x = (bounds.x + bounds.width / 2) - (w);
-//        topHitbox.y = bounds.y;
-//        topHitbox.width = w * 2;
-//        topHitbox.height = h / 2;
-//        //WHITE
-//        bottomHitbox.x = (bounds.x + bounds.width / 2) - (w * 3) / 2;
-//        bottomHitbox.y = bounds.y + h + h / 2;
-//        bottomHitbox.width = w * 3;
-//        bottomHitbox.height = h / 2;
-//        //YELLOW
-//        leftHitbox.x = topHitbox.x - w;
-//        leftHitbox.y = bounds.y + h / 2;
-//        leftHitbox.width = w;
-//        leftHitbox.height = h;
-//        //GREEN
-//        rightHitbox.x = topHitbox.x + w * 2;
-//        rightHitbox.y = bounds.y + h / 2;
-//        rightHitbox.width = w;
-//        rightHitbox.height = h;
-//    }
     public void updateInnerHitbox() {
         //create inner hitbox to determin left, right top bottom collision
         float w = bounds.width / 4;
@@ -290,46 +208,6 @@ public class Player extends DynamicGameObject {
 //        this.grounded = val;
     }
 
-    /**
-     * Loop through every single tile
-     */
-    private void collision_one() {
-        /*
-         1.Detect if larger hitbox intercepts a spikeBlock
-         2.handle smaller intersections
-         */
-
-        //Goes through every spikeBlock in the game (NOT GOOD)
-        for (int y = 0; y < World.NO_OF_TILES_Y; y++) {
-            for (int x = 0; x < World.NO_OF_TILES_X; x++) {
-                Tile t = world.getTile(x, y);
-                if (t.solid) {
-                    //If we have a solid spikeBlock
-                    numOfCollision++;
-                    System.out.println(numOfCollision); //Make it average per secondt 
-                    if (bounds.intersects(t.bounds)) {
-                        //Check inner hitbox for collision and respond
-                        doInnerColCheck(t.bounds);
-                    }
-                }
-            }
-        }//end outer for loop
-    }
-
-    /**
-     * Loop through list of solid tiles
-     */
-    private void collision_two() {
-
-    }
-
-    /**
-     * Loop through whats visible to the camera(+1) only
-     */
-    private void collision_three() {
-
-    }
-
     public void doInnerColCheck(Rectangle.Float wall) {
 //        System.out.println("inner");
         //top
@@ -350,12 +228,7 @@ public class Player extends DynamicGameObject {
             velocity.x = 0;
             bounds.x = wall.x - bounds.width - 1; //removes the 2's
         }
-        //bottom
-//        Tile botLeft = worldToTile(bottomHitbox.x, bottomHitbox.y);
-//        Tile botRight = worldToTile(bottomHitbox.x + bottomHitbox.width, bottomHitbox.y);
-//        if (!botLeft.solid && !botRight.solid) {
-//            grounded = false;
-//        }
+        
         if (bottomHitbox.intersects(wall)) {
             if (velocity.y > 0) {
 //            System.out.println("bot");
@@ -367,12 +240,6 @@ public class Player extends DynamicGameObject {
                 System.out.println("NOO, IM MOVING UP, do not snap me pls");
             }
         }
-    }
-
-    private Tile worldToTile(float x, float y) {
-        System.out.println((int) Math.floor(x / Tile.TILE_WIDTH));
-        System.out.println((int) Math.floor(y / Tile.TILE_WIDTH));
-        return world.getTile((int) Math.floor(x / Tile.TILE_WIDTH), (int) Math.floor(y / Tile.TILE_WIDTH));
     }
 
     public void handleInput() {
@@ -467,7 +334,7 @@ public class Player extends DynamicGameObject {
         //Apply gravity if player is falling or jumping
         if (playerState == STATE_FALLING || playerState == STATE_JUMP) {
             //velocity never faster than 25m/s
-            velocity.y += World.gravity.y * deltaTime;
+            velocity.y += Level.gravity.y * deltaTime;
             velocity.y = Helper.Clamp(velocity.y, -TERMINAL_VELOCITY * 3, TERMINAL_VELOCITY * 3);
         }
 
@@ -502,13 +369,13 @@ public class Player extends DynamicGameObject {
 
     @Override
     void gameRender(Graphics2D g) {
-        g.setStroke(stroke);
+//        g.setStroke(stroke);
 
-        switch (World.renderMode) {
-            case World.HITBOX_MODE:
+        switch (Level.renderMode) {
+            case Level.HITBOX_MODE:
                 drawHitbox(g);
                 break;
-            case World.BITMAP_MODE:
+            case Level.BITMAP_MODE:
                 drawRender(g);
                 break;
         }
@@ -597,7 +464,7 @@ public class Player extends DynamicGameObject {
 //        g.drawString("Pos: " + String.valueOf(position), fontPos.x, fontPos.y);
         g.drawString("Pos: " + "x: " + (int) bounds.x + ", y: " + (int) bounds.y, fontPos.x, fontPos.y);
         g.drawString("Vel: " + String.valueOf(velocity), fontPos.x, fontPos.y + 35);
-        g.drawString("Acc: " + String.valueOf(World.gravity), fontPos.x, fontPos.y + 65);
+        g.drawString("Acc: " + String.valueOf(Level.gravity), fontPos.x, fontPos.y + 65);
         //draw playerMo state
         switch (playerState) {
             case STATE_IDLE:

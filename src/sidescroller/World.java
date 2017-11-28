@@ -5,544 +5,507 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
-import java.util.Random;
+import java.awt.geom.AffineTransform;
+import java.util.ArrayList;
+import java.util.List;
+import static sidescroller.GamePanel.GAME_HEIGHT;
+import static sidescroller.GamePanel.GAME_WIDTH;
+import static sidescroller.GamePanel.WORLD_STATE_GAMEOVER;
 
 /**
- * 16/05/2016
+ * Newly created world class to store the games simulation
+ *
+ * 28-Nov-2017, 20:53:51.
  *
  * @author Mo
  */
 public class World extends GameObject {
-    //Double the screen width
-    public static final int NO_OF_TILES_X = (GamePanel.GAME_WIDTH / Tile.TILE_WIDTH) * 2;   //80
-    public static final int NO_OF_TILES_Y = (GamePanel.GAME_HEIGHT / Tile.TILE_HEIGHT);     //18
-    
-    public static final float WORLD_GRAVITY = 1000;
-    public static final Vector2D gravity = new Vector2D(0, WORLD_GRAVITY);
 
-    public static final int NO_OF_LEVELS = 1;
-    //View changer
-    public static final int HITBOX_MODE = 0;
-    public static final int BITMAP_MODE = 1;
-    public static int renderMode = HITBOX_MODE; //initial render mode
+    //GAME VARIABLES HERE-------------------------------------------------------
+    private float scaleTime = 1;
+    private Color backgroundColor;    //Represents colour of background
 
-    //Array holding all tiles
-    private Tile[][] tiles;
-    //level to load
-    private BufferedImage level;
+    private SpatialHashGrid grid;
+    private int numOfCollision = 0;
+//    private Assets assets;    //Not needed here
+    private Camera camera;
+//    private World world;
+    private Level level;
+    private Player player;
+    private Clouds clouds;
+    private List<Thwomp> thwomps;
 
-    Random ran = new Random();
-
-    //Moves the world (x, y) units
-    private int xShift = 0;
-    private int yShift = 0;
+    //Debuggin
+    private Point p = new Point();
+    private int[] coord = new int[2];   //prob do not need
+    private int[] coord2 = new int[2];  //prob do not need
+    private boolean drawTemp = false;
+    private float counter = 0;
+    private Tile[] drawTiles = new Tile[6];
 
     public World() {
-        //Initial new world here
-        tiles = new Tile[NO_OF_TILES_Y][NO_OF_TILES_X];
-        System.out.println("No x tiles: " + NO_OF_TILES_X);
-        System.out.println("No y tiles: " + NO_OF_TILES_Y);
-
-//        tiles = new Tile[NO_OF_TILES_Y][NO_OF_TILES_X];
-        //Load images
-        //Initialise each Tile to empty
-        clearBoard();   //sets to null
-        initTiles();    //create empty tiles
-        resetBoard();   //sets to empty (not needed here)
-
-        loadLevel();
-
-//        setBorder();
-        printNoSolidBlocks();   //can delete
+        //initialise varialbes
+        init();
     }
 
-    /**
-     * Sets all spikeBlocks to null
-     */
-    public void clearBoard() {
-        System.out.println("Setting all tiles to null...");
-        for (int y = 0; y < NO_OF_TILES_Y; y++) {
-            for (int x = 0; x < NO_OF_TILES_X; x++) {
-                tiles[y][x] = null;
-            }
+    private void init() {
+//        assets = new Assets();
+        Assets.loadImages();
+//        world = new World();
+        level = new Level();
+        player = new Player(150,
+                GamePanel.GAME_HEIGHT - Tile.TILE_HEIGHT * 2 - 80,
+                Player.PLAYER_WIDTH,
+                Player.PLAYER_HEIGHT);
+        thwomps = new ArrayList<>();
+        for (int i = 0; i < 20; i++) {
+            thwomps.add(new Thwomp(180 + (i * Thwomp.THOWMP_WIDTH), 0, Thwomp.THOWMP_WIDTH, Thwomp.THOWMP_HEIGHT, player));
         }
-//        System.out.println("what is it: "+tiles[0][0].bounds);
+        clouds = new Clouds();
+        camera = new Camera(player, new Vector2D());
+
+        initGrid();
+        //-----------------------------END my random test
+        backgroundColor = new Color(0, 0, 0);    //Represents colour of background
+//        backgroundColor = new Color(135,206,235);    //Represents colour of background
     }
 
-    /**
-     * Called from the constructor, sets the position of all tiles
-     */
-    private void initTiles() {
-        System.out.println("Initilising....(sepll)");
-        for (int y = 0; y < NO_OF_TILES_Y; y++) {
-            for (int x = 0; x < NO_OF_TILES_X; x++) {
-//                tiles[i][j] = new Tile(i * Tile.TILE_WIDTH, j * Tile.TILE_HEIGHT, Tile.EMPTY);
-//                tiles[i][j] = new Tile(new Vector2D(i * Tile.TILE_WIDTH, j * Tile.TILE_HEIGHT), Tile.EMPTY);
-                tiles[y][x] = new Tile(x * Tile.TILE_WIDTH, y * Tile.TILE_HEIGHT,
-                        Tile.TILE_WIDTH, Tile.TILE_HEIGHT,
-                        Tile.EMPTY);
-            }
-        }
-    }
-
-    /**
-     * Sets all spikeBlocks to empty
-     *
-     * FIX LOGIC HERE
-     */
-    public void resetBoard() {
-        System.out.println("Setting all tiles to empty...");
-        for (int y = 0; y < NO_OF_TILES_Y; y++) {
-            for (int x = 0; x < NO_OF_TILES_X; x++) {
-//                tiles[i][j].setID(Tile.EMPTY);
-//                tiles[i][j].setTile(i, j, Tile.EMPTY);
-                tiles[y][x].setTile(Tile.EMPTY, false);
-            }
-        }
-    }
-
-    /**
-     * Loads either a random level or level 0
-     */
-    public void loadLevel() {
-//        clearPositions();
-        /*
-         ITEM = ( R ,  G ,  B )
-
-         Empty = (0, 0, 0) : BLACK
-         Wall = (120, 120, 120)  : GRAY
-         Player = (255, 255, 0): YELLOW
-         Home = (255, 0, 0)  : RED
-         Box = (0, 255, 0)  : GREEN
-         BoxOnHome = (0, 0, 255)  : BLUE
-         */
-
-        //System.out.println("Color Model: " + level.getColorModel());
-        level = Assets.level;
-        int w = level.getWidth();
-        int h = level.getHeight();
-//        System.out.println("w " + w + "\nh " + h);
-
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                int pixel = level.getRGB(x, y);
-                //Get color of pixel in level array
-                int a = ((pixel & 0xff000000) >>> 24);
-                int r = ((pixel & 0x00ff0000) >>> 16);
-                int g = ((pixel & 0x0000ff00) >>> 8);
-                int b = ((pixel & 0x000000ff));
-
-                //Depending on the color of a pixel, set the tile
-                if (r == 0 && g == 0 && b == 0) {
-                    //System.out.println("Black block at: " + x + " " + y);
-                    //*************DO NOT NEED*************
-                    tiles[y][x].setTile(Tile.EMPTY, false);
-                    continue;   //We found a tile, do not need to check others
-                }
-                //If the current pixel is grey
-                if (r == 255 && g == 0 && b == 0) {
-                    //System.out.println("Wall block at: " + x + " " + y);
-                    tiles[y][x].setTile(Tile.TL, true);
-                    continue;
-                }
-                if (r == 0 && g == 255 && b == 0) {
-                    //System.out.println("Home block at: " + x + " " + y);
-                    tiles[y][x].setTile(Tile.TM, true);
-                    continue;
-                }
-                if (r == 0 && g == 0 && b == 255) {
-                    //System.out.println("Box block at: " + x + " " + y);
-                    tiles[y][x].setTile(Tile.TR, true);
-                    continue;
-                }
-                //new blocks
-                if (r == 152 && g == 0 && b == 0) {
-                    tiles[y][x].setTile(Tile.ML, true);
-                    continue;
-                }
-                if (r == 2 && g == 138 && b == 2) {
-                    tiles[y][x].setTile(Tile.MM, true);
-                    continue;
-                }
-                if (r == 0 && g == 0 && b == 94) {
-                    tiles[y][x].setTile(Tile.MR, true);
-                    continue;
-                }//end new blocks
-                if (r == 120 && g == 120 && b == 120) {
-                    //System.out.println("Box block at: " + x + " " + y);
-                    tiles[y][x].setTile(Tile.WALL, true);
-                }
-
-//                //Extra tiles
-                if (r == 0 && g == 255 && b == 255) {
-                    //System.out.println("Box block at: " + x + " " + y);
-                    tiles[y][x].setTile(Tile.EMPTY, false);
-                }
-                if (r == 200 && g == 100 && b == 0) {
-                    //System.out.println("Box block at: " + x + " " + y);
-                    tiles[y][x].setTile(Tile.EMPTY, false);
-                }
-
-            }
-            //System.out.println("");
-        }
-
-        //Random test - delete me
-//        tiles[3][10].setID(Tile.WALL);
-//        tiles[3][10].setTile(Tile.WALL, true);
-    }
-
-    /**
-     * Called when setting 1001 spikes spikeBlocks
-     *
-     * Loops though level bitmap, depending on the pixel, load a new tile of
-     * 1001 spikes type.
-     */
-    private void setNewTiles() {
-        level = Assets.level;
-        int w = level.getWidth();
-        int h = level.getHeight();
-
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                int pixel = level.getRGB(x, y);
-
-                int a = ((pixel & 0xff000000) >>> 24);
-                int r = ((pixel & 0x00ff0000) >>> 16);
-                int g = ((pixel & 0x0000ff00) >>> 8);
-                int b = ((pixel & 0x000000ff));
-
-                //Id of tile at x,y
-                int id = tiles[y][x].getId();
-//                int id = getTileId(rows, cols);   //same line above
-                if (r == 0 && g == 0 && b == 0) {
-                    //System.out.println("Black block at: " + x + " " + y);
-                    //*************DO NOT NEED*************
-                    tiles[y][x].loadNewImage(id);
-                    continue;
-                }
-                //If the current pixel is grey
-                if (r == 255 && g == 0 && b == 0) {
-                    //System.out.println("Wall block at: " + x + " " + y);
-                    tiles[y][x].loadNewImage(id);
-                    continue;
-                }
-                if (r == 0 && g == 255 && b == 0) {
-                    //System.out.println("Home block at: " + x + " " + y);
-                    tiles[y][x].loadNewImage(id);
-                    continue;
-                }
-                if (r == 0 && g == 0 && b == 255) {
-                    //System.out.println("Box block at: " + x + " " + y);
-                    tiles[y][x].loadNewImage(id);
-                    continue;
-                }
-                //new blocks
-                if (r == 152 && g == 0 && b == 0) {
-                    tiles[y][x].loadNewImage(id);
-                    continue;
-                }
-                if (r == 2 && g == 138 && b == 2) {
-                    tiles[y][x].loadNewImage(id);
-                    continue;
-                }
-                if (r == 0 && g == 0 && b == 94) {
-                    tiles[y][x].loadNewImage(id);
-                    continue;
-                }//end new blocks
-                //wall
-                if (r == 120 && g == 120 && b == 120) {
-                    //System.out.println("Box block at: " + x + " " + y);
-                    tiles[y][x].loadNewImage(id);
-                    //continue;
-                }
-
-                //Extra tiles
-                if (r == 0 && g == 255 && b == 255) {
-                    //System.out.println("Box block at: " + x + " " + y);
-                    tiles[y][x].setTile(Tile.WATER, false);
-                }
-                if (r == 200 && g == 100 && b == 0) {
-                    //System.out.println("Box block at: " + x + " " + y);
-                    tiles[y][x].setTile(Tile.LAVA, false);
-                }
-            }
-            //System.out.println("");
-        }
-    }
-
-    /**
-     * CAN DELETE
-     */
-    private void setBorder() {
-        //Sets the TOP wall blocked
-        for (int y = 0; y < NO_OF_TILES_Y; y++) {
-            tiles[y][0].setID(Tile.WALL);
-        }
-        //Sets the BOTTOM wall blocked
-        for (int y = 0; y < NO_OF_TILES_Y; y++) {
-            tiles[y][NO_OF_TILES_X - 1].setID(Tile.WALL);
-        }
-        //Sets the TL wall blocked
-        for (int x = 0; x < NO_OF_TILES_X; x++) {
-            tiles[0][x].setID(Tile.WALL);
-        }
-        //Sets the TR wall blocked
-        for (int x = 0; x < NO_OF_TILES_X; x++) {
-            tiles[NO_OF_TILES_Y - 1][x].setID(Tile.WALL);
-        }
-    }
-
-    private void printNoSolidBlocks() {
-        System.out.println("Going though all blocks...");
-        int num = 0;
-        for (int y = 0; y < NO_OF_TILES_Y; y++) {
-            for (int x = 0; x < NO_OF_TILES_X; x++) {
-                if (tiles[y][x].solid) {
-                    num++;
+    private void initGrid() {
+        grid = new SpatialHashGrid(GAME_WIDTH * 2, GAME_HEIGHT, 300);    //Cell size (200 pixels)
+        //Add all static tiles
+        int numStaticObjects = 0;
+        for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
+            for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
+                Tile t = level.getTile(x, y);
+                if (t.solid) {
+                    grid.insertStaticObject(t);
+                    numStaticObjects++;
                 }
             }
         }
-        System.out.println("*No of solid blocks is: " + num + "*");
-    }
-
-    /*  Getters & Setters */
-    public void setTileId(int y, int x, int id) {
-        tiles[y][x].setID(id);
-    }
-
-    /**
-     * Gets the spikeBlock type
-     *
-     * @param y position of spikeBlock
-     * @param x position of spikeBlock
-     * @return id of spikeBlock
-     */
-    public int getTileId(int x, int y) {
-        return tiles[y][x].getId();
-    }
-
-    /**
-     * Gets the actual spikeBlock (if another class needs to access a
-     * spikeBlock)
-     *
-     * @param y
-     * @param x
-     * @return
-     */
-    public Tile getTile(int x, int y) {
-        /*CLAMP ver 1*/
-//        if (x < 0 || x > NO_OF_TILES_X) {
-//            System.out.println("Error! Can't move outside map -> x val");
-//            return;
-//        }
-//        if (y < 0 || y > NO_OF_TILES_Y) {
-//            System.out.println("Error! Can't move outside map -> y val");
-//            return;
-//        }
-        /*CLAMP ver 2 (clamp between 0 - Tiles.length*/
-        if (x < 0 || y < 0) {
-            x = 0;
-            y = 0;
-            System.out.println("Tiles[-y][-x] Not avaible -> clamping");
-        }
-        if (x >= World.NO_OF_TILES_X) {
-            System.out.println("x: " + x);
-            System.out.println("World.NO_OF_TILES_X = " + World.NO_OF_TILES_X);
-            x = World.NO_OF_TILES_X - 1;
-            System.out.println("x clamped to: " + (World.NO_OF_TILES_X - 1));
-        }
-        if (y >= World.NO_OF_TILES_Y) {
-            y = World.NO_OF_TILES_Y - 1;
-            System.out.println("y clamped to: " + (World.NO_OF_TILES_Y - 1));
-        }
-        return tiles[y][x];
-    }
-
-    public Tile getTile(Point tile) {
-        if (tile.x < 0 || tile.y < 0) {
-            tile.x = 0;
-            tile.y = 0;
-            System.out.println("Tiles[-y][-x] Not avaible -> clamping");
-        }
-        if (tile.x >= World.NO_OF_TILES_X) {
-            System.out.println("x: " + tile.x);
-            System.out.println("World.NO_OF_TILES_X = " + World.NO_OF_TILES_X);
-            tile.x = World.NO_OF_TILES_X - 1;
-            System.out.println("x clamped to " + (World.NO_OF_TILES_X - 1));
-        }
-        if (tile.y >= World.NO_OF_TILES_Y) {
-            tile.y = World.NO_OF_TILES_Y - 1;
-            System.out.println("y clamped to " + (World.NO_OF_TILES_Y - 1));
-        }
-        return tiles[tile.y][tile.x];
+        System.out.println("No of static objects added: " + numStaticObjects);
+        System.out.println("No of static cells: " + grid.staticCells.length);
+        int n = 10;
+        System.out.println("Cell " + n + " contains: " + grid.staticCells[n].size() + " objects");
+        //Add dynamic object (player)
+//        grid.insertDynamicObject(player);
     }
 
     public void handleInput() {
-        //Hitbox
+        //Extra inputs
+        if (Input.isKeyPressed(KeyEvent.VK_N)) {
+            scaleTime = 0.3f;
+        } else if (Input.isKeyReleased(KeyEvent.VK_N)) {
+            scaleTime = 1f;
+        }
         if (Input.isKeyTyped(KeyEvent.VK_X)) {
-            renderMode = HITBOX_MODE;
+//            backgroundColor = new Color(0, 0, 0);
+            setBackgroundColor(0, 0, 0, 255);
         }
-        //Mario
         if (Input.isKeyTyped(KeyEvent.VK_C)) {
-            renderMode = BITMAP_MODE;
-            loadLevel();
+//            backgroundColor = new Color(100, 120, 100);
+            setBackgroundColor(100, 120, 100, 255);
         }
-        //1001 Spikes
-        if (Input.isKeyTyped(KeyEvent.VK_V)) {
-            renderMode = BITMAP_MODE;
-            setNewTiles();
+        if (Input.isKeyTyped(KeyEvent.VK_R)) {
+//            reset();
         }
+        if (Input.isKeyTyped(KeyEvent.VK_I)) {
+            setDebugTiles();
+        }
+        
+        //Handle sub class input
+        player.handleInput();
+        level.handleInput();
     }
 
-    /**
-     * *************** UPDATE & RENDER *******************
-     */
+    private void setDebugTiles() {
+        //Debugging (GET ALL THE TILES ALL TEMPORATILY SET A RED BORDER AROUnd THEM)
+        System.out.println("******Debugging******");
+        System.out.println("Getting tile left to player...");
+//            coord = tileCoordsAdj(player, "left");
+//            coord = tileCoordsAdj(player, "right", (int) Player.PLAYER_WIDTH);
+        int amt = 2;
+        coord = tileCoordsAdj(player, "left", amt, coord);
+        Tile leftTile = level.getTile(coord[0], coord[1]);
+        coord = tileCoordsAdj(player, "right", amt, coord);
+        Tile rightTile = level.getTile(coord[0], coord[1]);
+        coord = tileCoordsAdj(player, "botLeft", amt, coord);
+        Tile botLeft = level.getTile(coord[0], coord[1]);
+        coord = tileCoordsAdj(player, "botRight", amt, coord);
+        Tile botRight = level.getTile(coord[0], coord[1]);
+        coord = tileCoordsAdj(player, "topLeft", amt, coord);
+        Tile topLeft = level.getTile(coord[0], coord[1]);
+        coord = tileCoordsAdj(player, "topRight", amt, coord);
+        Tile topRight = level.getTile(coord[0], coord[1]);
+        drawTiles[0] = leftTile;
+        drawTiles[1] = rightTile;
+        drawTiles[2] = botLeft;
+        drawTiles[3] = botRight;
+        drawTiles[4] = topLeft;
+        drawTiles[5] = topRight;
+//            drawTiles[0] = world.getTile(coord[0], coord[1]);
+        counter = 0;
+        drawTemp = true;
+    }
+
     @Override
     void gameUpdate(float deltaTime) {
-        //If im moving any of the world tiles
-//        System.out.println("spikeBlock: "+tiles[3][10].hitbox);
-//        tiles[15][NO_OF_TILES_X-1].y -=4;
+        //********** Do updates HERE **********
+        deltaTime *= scaleTime; //Objects that are slow mo after this line
+//        updateCounter(deltaTime);
 
-        //update animated tiles
-        Assets.spikeWater.update(deltaTime);
-        Assets.spikeLava.update(deltaTime);
+        camera.gameUpdate(deltaTime);
+//        world.gameUpdate(deltaTime);
+        level.gameUpdate(deltaTime);
+        clouds.gameUpdate(deltaTime);
+        player.gameUpdate(deltaTime);
+        for (Thwomp t : thwomps) {
+            t.gameUpdate(deltaTime);
+        }
+//        updateRandomThings();
+
+//        //Check for collisions
+//        handleCollisions(deltaTime);
+//        handleCollisionHashgrid();
+        handleCollisions3(deltaTime);
+        checkGameover();
     }
 
-    /**
-     * INSTEAD OF RENDERING BASED ON LOOP, RENDER BASED ON TILE POSITION
-     *
-     * @param g
-     */
+    private void updateCounter(float deltaTime) {
+        if (drawTemp) {
+            counter += deltaTime;
+        }
+        if (counter >= 3) {
+            drawTemp = false;
+        }
+    }
+
+    private void handleCollisions3(float deltaTime) {
+        playerCollision();
+        thwompCollision();
+    }
+
+    private void playerCollision() {
+        xCol(player);
+        yCol(player);
+        checkGrounded(player);
+    }
+
+    private void thwompCollision() {
+        //        if (isSolid(pointToTileCoordsX(thwomp.bounds.x + Thwomp.THOWMP_WIDTH / 2), pointToTileCoordsY(thwomp.bounds.y + Thwomp.THOWMP_HEIGHT + 1))) {
+//            thwomp.velocity.y = 0;
+//        }
+        int len = thwomps.size();
+        for (int i = 0; i < len; i++) {
+            Thwomp thwomp = thwomps.get(i);
+            if (thwomp.bounds.intersects(player.bounds)) {
+//                System.out.println("HIT");
+                player.playerState = Player.STATE_DEAD;
+            }
+        }
+    }
+
+    private void xCol(DynamicGameObject obj) {
+        int amt = 1;    //How far the tile is from the player
+        //Check left tile
+        if (tileAdjIsBlocking(obj, "left", amt) && obj.velocity.x < 0) {
+            obj.velocity.x = 0;
+            while (tileAdjIsBlocking(obj, "left", amt)
+                    && !tileAdjIsBlocking(obj, "right", amt)) {
+                obj.position.x += 1;
+                obj.bounds.x += 1;
+            }
+            //Check right tile
+        } else if (tileAdjIsBlocking(obj, "right", amt) && obj.velocity.x > 0) {
+            obj.velocity.x = 0;
+            while (tileAdjIsBlocking(obj, "right", amt)
+                    && !tileAdjIsBlocking(obj, "left", amt)) {
+                obj.position.x -= 1;
+                obj.bounds.x -= 1;
+            }
+        }
+    }
+
+    private void yCol(DynamicGameObject obj) {
+//        Tile current = worldToTile(player.bounds.x, player.bounds.y);
+        Player oPlayer = (Player) obj;
+        int amt = 1;
+        if (tileAdjIsBlocking(obj, "bot", amt) && obj.velocity.y > 0) {
+            oPlayer.velocity.y = 0;
+            oPlayer.grounded = true;
+            while (tileAdjIsBlocking(obj, "bot", amt)) {
+//                System.out.println("to touch");
+                obj.position.y -= 1;
+                obj.bounds.y -= 1;
+            }
+        } else if (tileAdjIsBlocking(obj, "top", amt) && obj.velocity.y < 0) {
+            oPlayer.velocity.y = 0;
+            while (tileAdjIsBlocking(obj, "top", amt)) {
+//                System.out.println("to touch");
+                obj.position.y += 1;
+                oPlayer.bounds.y += 1;
+            }
+        }
+    }
+
+    //First function to get called during collision detection
+    private boolean tileAdjIsBlocking(DynamicGameObject player, String dir, int amount) {
+        //Use StringBuilder to concatinate strings
+        switch (dir) {
+            case "left":
+            case "right":
+                //Handle left/Right collision
+//                tileCoordsAdj(player, dir, amount, coord);
+//                return (isSolid(coord[0], coord[1]));
+                //Replace with one line below
+                return ((isSolid(tileCoordsAdj(player, dir + "Up", amount, p)))
+                        || (isSolid(tileCoordsAdj(player, dir + "Down", amount, p))));
+            case "bot":
+            case "top":
+                //Handle up/down collision
+//                tileCoordsAdj(player, dir + "Left", amount, coord);
+//                tileCoordsAdj(player, dir + "Right", amount, coord2);
+//                return (isSolid(coord[0], coord[1]) || isSolid(coord2[0], coord2[1]));
+                return (isSolid(tileCoordsAdj(player, dir + "Left", amount, p))
+                        || isSolid(tileCoordsAdj(player, dir + "Right", amount, p)));
+        }
+        return false;
+    }
+
+    private boolean isSolid(int x, int y) {
+        return level.getTile(x, y).solid;
+    }
+
+    private boolean isSolid(Point tile) {
+        return level.getTile(tile).solid;
+    }
+
+//    public int[] tileCoordsAdj(DynamicGameObject player, String dir) {
+//        return tileCoordsAdj(player, dir, 1);
+//    }
+    public int[] tileCoordsAdj(DynamicGameObject player, String dir, int amount, int[] adj) {
+        //Long ass function
+        //Given a player and a positin (String) -> returns the tileCoordsForPoint
+        float x = 0;    //reset
+        float y = 0;
+        adj[0] = 0;
+        adj[1] = 0;
+//        p.setLocation(0, 0);
+        //If amount == empty, then 1 is assigned
+        //amount = amount || 1; javascript code
+        switch (dir) {
+            case "left":
+//                System.out.println("left");
+                x = player.bounds.x - amount;
+                y = player.bounds.y + player.bounds.height / 2;
+                break;
+            case "right":
+                x = player.bounds.x + player.bounds.width + amount;
+                y = player.bounds.y + player.bounds.height / 2;
+                break;
+            case "botLeft":
+//                System.out.println("botLeft");
+                x = player.bounds.x;
+                y = (player.bounds.y + player.bounds.height) + amount;
+                break;
+            case "botRight":
+//                System.out.println("botRight");
+                x = (player.bounds.x + player.bounds.width);
+                y = (player.bounds.y + player.bounds.height) + amount;
+                break;
+            case "topLeft":
+                x = player.bounds.x;
+                y = (player.bounds.y) + amount;
+                break;
+            case "topRight":
+                x = (player.bounds.x + player.bounds.width);
+                y = (player.bounds.y) + amount;
+                break;
+        }
+        adj[0] = pointToTileCoordsX(x);
+        adj[1] = pointToTileCoordsY(y);
+//        System.out.println("x = " + coord[0]);
+//        System.out.println("y = " + coord[1]);
+        return adj;
+    }
+
+    public Point tileCoordsAdj(DynamicGameObject player, String dir, int amount, Point p) {
+        //Long ass function
+        //Given a player and a positin (String) -> returns the tileCoordsForPoint
+        float x = 0;    //reset
+        float y = 0;
+        p.x = 0;
+        p.y = 0;
+//        p.setLocation(0, 0);
+        //If amount == empty, then 1 is assigned
+        //amount = amount || 1; javascript code
+        switch (dir) {
+            case "leftUp":
+//                System.out.println("left");
+                x = player.bounds.x;
+                y = player.bounds.y + amount + 5;
+                break;
+            case "leftDown":
+//                System.out.println("left");
+                x = player.bounds.x;
+                y = (player.bounds.y + player.bounds.height) - amount - 5;
+                break;
+            case "rightUp":
+                x = (player.bounds.x + player.bounds.width);
+                y = player.bounds.y + amount + 5;
+                break;
+            case "rightDown":
+                x = (player.bounds.x + player.bounds.width);
+                y = (player.bounds.y + player.bounds.height) - amount - 5;
+                break;
+            case "botLeft":
+//                System.out.println("botLeft");
+                x = player.bounds.x;
+                y = (player.bounds.y + player.bounds.height) + amount;
+                break;
+            case "botRight":
+//                System.out.println("botRight");
+                x = (player.bounds.x + player.bounds.width);
+                y = (player.bounds.y + player.bounds.height) + amount;
+                break;
+            case "topLeft":
+                x = player.bounds.x;
+                y = (player.bounds.y) + amount;
+                break;
+            case "topRight":
+                x = (player.bounds.x + player.bounds.width);
+                y = (player.bounds.y) + amount;
+                break;
+        }
+        p.x = pointToTileCoordsX(x);
+        p.y = pointToTileCoordsY(y);
+//        System.out.println("x = " + coord[0]);
+//        System.out.println("y = " + coord[1]);
+        return p;
+    }
+
+    private int pointToTileCoordsX(float x) {
+        //Given an x coordinate -> returns the tile position of the array
+//        System.out.println((int) Math.floor(x / Tile.TILE_WIDTH));
+        return (int) Math.floor(x / Tile.TILE_WIDTH);
+    }
+
+    private int pointToTileCoordsY(float y) {
+//        System.out.println((int) Math.floor(y / Tile.TILE_WIDTH));
+        return (int) Math.floor(y / Tile.TILE_HEIGHT);
+    }
+
+    private Tile worldToTile(float x, float y) {
+        //Given any point -> returns a tile at the position
+        return level.getTile(pointToTileCoordsX(x), pointToTileCoordsY(y));
+    }
+
+    private void checkGrounded(DynamicGameObject obj) {
+        //Change bottomHitbox to oPlayer.bounds
+        int amt = -4;
+        Player oPlayer = (Player) obj;
+        Tile botLeft = worldToTile(oPlayer.bottomHitbox.x + amt, oPlayer.bottomHitbox.y + Player.PLAYER_HEIGHT);
+        Tile botRight = worldToTile(oPlayer.bottomHitbox.x + oPlayer.bottomHitbox.width - amt, oPlayer.bottomHitbox.y + Player.PLAYER_HEIGHT);
+        if (!botLeft.solid && !botRight.solid) {
+//            System.out.println("grounded = false");
+            oPlayer.grounded = false;
+        }
+    }
+
+    private void checkGameover() {
+        if (player.playerState == Player.STATE_DEAD) {
+//            state = WORLD_STATE_GAMEOVER;
+        }
+    }
+
+    private void handleCollisionHashgrid() {
+        List<StaticGameObject> colliders = grid.getPotentialColliders(player);
+        int len = colliders.size();
+//        System.out.println("potential coll: "+len);
+        for (int i = 0; i < len; i++) {
+            StaticGameObject collider = colliders.get(i);
+//            numOfCollision++;
+//            System.out.println(numOfCollision);
+
+            //If player bounds intersects any other static object within cell
+            if (player.bounds.intersects(collider.bounds)) {
+//                System.out.println("outer");
+                System.out.println("Player bounds");
+//                worldToTile(player.bottomHitbox.x, player.bottomHitbox.y);
+                worldToTile(player.bounds.x, player.bounds.y);
+                player.doInnerColCheck(collider.bounds);
+            }
+        }
+    }
+
     @Override
     void gameRender(Graphics2D g) {
-        /* Called every frame */
+        //Clear screen
+        g.setColor(backgroundColor);
+        g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-        switch (renderMode) {
-            case HITBOX_MODE:
-                drawHitbox(g);
-                break;
-            case BITMAP_MODE:
-                drawRender(g);
-                break;
-//            case BITMAP_SPIKE_MODE:
-//                drawSpikeRender(g);
-//                break;
+        //********** Do drawings HERE **********
+        //When camera moves, so does game world
+        AffineTransform old = g.getTransform();
+//        g.scale(1.5, 1.5);    //also add 300 to cam.pos.y
+
+        //Camera view
+        g.translate(-camera.camPos.x, -camera.camPos.y);
+//        drawRandomThings();
+        clouds.gameRender(g);
+//        world.gameRender(g);
+        level.gameRender(g);
+        player.gameRender(g);
+        for (Thwomp t : thwomps) {
+            t.gameRender(g);
+        }
+        //Draw Debuggin info above other objects
+//        drawHashGrid(g);
+        drawTilesBounds(g);
+        g.translate(+camera.camPos.x, +camera.camPos.y);
+
+        g.setTransform(old);
+    }
+
+    private void drawTilesBounds(Graphics2D g) {
+        if (drawTemp) {
+//            System.out.println("drawing");
+            g.setColor(Color.YELLOW);
+            Tile t = drawTiles[0];
+            g.draw(t.bounds);
+            g.setColor(Color.GREEN);
+            t = drawTiles[1];
+            g.draw(t.bounds);
+            g.setColor(Color.WHITE);
+            t = drawTiles[2];
+            g.draw(t.bounds);
+            t = drawTiles[3];
+            g.draw(t.bounds);
+            g.setColor(Color.RED);
+            t = drawTiles[4];
+            g.draw(t.bounds);
+            t = drawTiles[5];
+            g.draw(t.bounds);
         }
     }
 
-    private void drawHitbox(Graphics2D g) {
-        //NAIVE, renders all tiles (including off screen tiles)
-        for (int y = 0; y < NO_OF_TILES_Y; y++) {
-            for (int x = 0; x < NO_OF_TILES_X; x++) {
-                //--USE SWITCH--
-                //If spikeBlock is empty -> SKIP CURRENT ITERATION
-                if (tiles[y][x].getId() == Tile.EMPTY) {
-                    continue;
-                }
-                //Depending on whats on the spikeBlock, choose appropriate color to render
-                if (tiles[y][x].getId() == Tile.WALL && tiles[y][x].solid) {
-                    g.setColor(Color.GRAY);
-//                    g.drawRect(tiles[i][j].position.x + xShift, tiles[i][j].position.y + yShift,
-//                            Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-                    g.draw(tiles[y][x].bounds);
-                } else if (tiles[y][x].getId() == Tile.TL && tiles[y][x].solid) {
-                    g.setColor(Color.GREEN);
-//                    g.drawRect(tiles[i][j].position.x + xShift, tiles[i][j].y + yShift,
-//                            Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-                    g.draw(tiles[y][x].bounds);
-                } else if (tiles[y][x].getId() == Tile.TM && tiles[y][x].solid) {
-                    g.setColor(Color.GREEN);
-//                    g.drawRect(tiles[i][j].position.x + xShift, tiles[i][j].y + yShift,
-//                            Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-                    g.draw(tiles[y][x].bounds);
-                } else if (tiles[y][x].getId() == Tile.TR && tiles[y][x].solid) {
-                    g.setColor(Color.GREEN);
-//                    g.drawRect(tiles[i][j].position.x + xShift, tiles[i][j].y + yShift,
-//                            Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-                    g.draw(tiles[y][x].bounds);
-                } else if (tiles[y][x].getId() == Tile.ML && tiles[y][x].solid) {
-                    g.setColor(Color.GREEN);
-//                    g.drawRect(tiles[i][j].x + xShift, tiles[i][j].y + yShift,
-//                            Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-                    g.draw(tiles[y][x].bounds);
-                } else if (tiles[y][x].getId() == Tile.MM && tiles[y][x].solid) {
-                    g.setColor(Color.GREEN);
-//                    g.drawRect(tiles[i][j].x + xShift, tiles[i][j].y + yShift,
-//                            Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-                    g.draw(tiles[y][x].bounds);
-                } else if (tiles[y][x].getId() == Tile.MR && tiles[y][x].solid) {
-                    g.setColor(Color.GREEN);
-//                    g.drawRect(tiles[i][j].x + xShift, tiles[i][j].y + yShift,
-//                            Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-                    g.draw(tiles[y][x].bounds);
-                }
-            }
+    private void drawHashGrid(Graphics2D g) {
+        g.setColor(Color.YELLOW);
+        int cell = (int) grid.cellSize;
+        //draw vertical
+        for (int i = cell; i < GAME_WIDTH * 2; i += cell) {
+            g.drawLine(i, 0, i, GAME_HEIGHT);
+        }
+        for (int i = cell; i < GAME_HEIGHT; i += cell) {
+            g.drawLine(0, i, GAME_WIDTH * 2, i);
         }
     }
 
-    private void drawRender(Graphics2D g) {
-        //NAIVE, renders all tiles (including off screen tiles)
-        for (int y = 0; y < NO_OF_TILES_Y; y++) {
-            for (int x = 0; x < NO_OF_TILES_X; x++) {
-                //If spikeBlock is empty -> SKIP CURRENT ITERATION
-                if (tiles[y][x].getId() == Tile.EMPTY) {
-                    continue;
-                }
-                //DUUUUUDE 1 LINE WAS ALL IT TOOKE!!!!!
-                g.drawImage(tiles[y][x].tileImg, (int) tiles[y][x].position.x + xShift,
-                        (int) tiles[y][x].position.y + yShift, null);
-                if (tiles[y][x].getId() == Tile.WATER) {
-//                    g.setColor(Color.GREEN);
-                    g.drawImage(Assets.spikeWater.getImage(), (int) tiles[y][x].position.x + xShift,
-                            (int) tiles[y][x].position.y + yShift, null);
-                } else if (tiles[y][x].getId() == Tile.LAVA) {
-//                    g.setColor(Color.GREEN);
-                    g.drawImage(Assets.spikeLava.getImage(), (int) tiles[y][x].position.x + xShift,
-                            (int) tiles[y][x].position.y + yShift, null);
-                }
-//                
-//                //You funny bruh vv
-//                //Depending on whats on the spikeBlock, choose appropriate color to render
-//                if (tiles[i][j].getId() == Tile.WALL) {
-////                    g.setColor(Color.GRAY);
-//                    g.drawImage(tiles[i][j].tileImg, (int) tiles[i][j].position.x + xShift,
-//                            (int) tiles[i][j].position.y + yShift, null);
-//                } else if (tiles[i][j].getId() == Tile.TL) {
-////                    g.setColor(Color.GREEN);
-//                    g.drawImage(tiles[i][j].tileImg, (int) tiles[i][j].position.x + xShift,
-//                            (int) tiles[i][j].position.y + yShift, null);
-//                } else if (tiles[i][j].getId() == Tile.TM) {
-////                    g.setColor(Color.GREEN);
-//                    g.drawImage(tiles[i][j].tileImg, (int) tiles[i][j].position.x + xShift,
-//                            (int) tiles[i][j].position.y + yShift, null);
-//                } else if (tiles[i][j].getId() == Tile.TR) {
-////                    g.setColor(Color.GREEN);
-//                    g.drawImage(tiles[i][j].tileImg, (int) tiles[i][j].position.x + xShift,
-//                            (int) tiles[i][j].position.y + yShift, null);
-//                } else if (tiles[i][j].getId() == Tile.ML) {
-////                    g.setColor(Color.GREEN);
-//                    g.drawImage(tiles[i][j].tileImg, (int) tiles[i][j].position.x + xShift,
-//                            (int) tiles[i][j].position.y + yShift, null);
-//                } else if (tiles[i][j].getId() == Tile.MM) {
-////                    g.setColor(Color.GREEN);
-//                    g.drawImage(tiles[i][j].tileImg, (int) tiles[i][j].position.x + xShift,
-//                            (int) tiles[i][j].position.y + yShift, null);
-//                } else if (tiles[i][j].getId() == Tile.MR) {
-////                    g.setColor(Color.GREEN);
-//                    g.drawImage(tiles[i][j].tileImg, (int) tiles[i][j].position.x + xShift,
-//                            (int) tiles[i][j].position.y + yShift, null);
-//                }else if (tiles[i][j].getId() == Tile.WATER) {
-////                    g.setColor(Color.GREEN);
-//                    g.drawImage(Assets.spikeWater.getImage(), (int) tiles[i][j].position.x + xShift,
-//                            (int) tiles[i][j].position.y + yShift, null);
-//                }else if (tiles[i][j].getId() == Tile.LAVA) {
-////                    g.setColor(Color.GREEN);
-//                    g.drawImage(Assets.spikeLava.getImage(), (int) tiles[i][j].position.x + xShift,
-//                            (int) tiles[i][j].position.y + yShift, null);
-//                }
-            }
-        }
+    public void setBackgroundColor(int r, int g, int b, int a) {
+        backgroundColor = new Color(r, g, b, a);
+    }
+
+    public Player getPlayer() {
+        return player;
     }
 }

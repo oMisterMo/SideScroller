@@ -20,7 +20,17 @@ import java.awt.Graphics2D;
  */
 public abstract class GameObject {
 
+    /**
+     * Updates the current game object
+     *
+     * @param deltaTime time since last frame
+     */
     abstract void gameUpdate(float deltaTime);
 
+    /**
+     * Draws the screen
+     *
+     * @param g graphics object
+     */
     abstract void gameRender(Graphics2D g);
 }
