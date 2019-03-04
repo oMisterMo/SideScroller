@@ -1,5 +1,7 @@
 package sidescroller;
 
+import common.Animation;
+import common.SpriteSheet;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -20,32 +22,34 @@ import java.util.List;
  *
  * 07-Sep-2016, 01:56:02.
  *
- * @author Mo
+ * @author Mohammed Ibrahim
  */
 public class Player extends DynamicGameObject {
+
     public static final float PLAYER_WIDTH = 28;    //32
     public static final float PLAYER_HEIGHT = 28;   //32
     //Player states
-    //All states out playerMo can be in -> Different animation for each playerState
     public static final int STATE_IDLE = 0;
     public static final int STATE_WALK = 1;
     public static final int STATE_RUN = 2;
     public static final int STATE_ACTION = 3;
     public static final int STATE_PUNCH = 4;
-    public static final int STATE_JUMP = 5; //Also is falling, can seperate
-    public static final int STATE_FALLING = 6; //Also is falling, can seperate
+    public static final int STATE_JUMP = 5;     //Also is falling, can seperate
+    public static final int STATE_FALLING = 6;  //Also is falling, can seperate
     public static final int STATE_CLIMB = 7;
     public static final int STATE_HURT = 8;
     public static final int STATE_DEAD = 9;
     public int playerState = STATE_FALLING;
 
-    //MovementStates    ( * 32 pixels = 1 meter)
+    //Movement constants    ( * 32 pixels = 1 meter)
     private static final int TERMINAL_VELOCITY = 200;   //6.25 m/s
     private static final int WALK_SPEED = 150;          //x
     private static final int RUN_SPEED = 200;           //x
     private static final int JUMP_HEIGHT = 380;         //y impulse
+    private static final int AIR_HOR_VEL = 250;
 //    private static final int FALL_ACEL = 800;         //10 m/s
 
+    //Player animations per state
     private Animation idle;
     private Animation idle2;
     private Animation walk;
@@ -53,14 +57,13 @@ public class Player extends DynamicGameObject {
     private boolean facingRight = true;
     private int idleCounter = 0;
 
-    //public Rectangle.Float bounds;  //outter blue hitbox
-    private Rectangle.Float leftHitbox;
-    private Rectangle.Float rightHitbox;
-    private Rectangle.Float topHitbox;
-    public Rectangle.Float bottomHitbox;
-    public boolean grounded = false;
-
-    private List<Fireball> fireball;
+//    //public Rectangle.Float bounds;  //outter blue hitbox
+//    private Rectangle.Float leftHitbox;
+//    private Rectangle.Float rightHitbox;
+//    private Rectangle.Float topHitbox;
+//    public Rectangle.Float bottomHitbox;
+//    public boolean grounded = false;
+    private List<Fireball> fireball;    //Shitty fireballs
 
     //For debugging****************************
     private Font f;
@@ -73,9 +76,10 @@ public class Player extends DynamicGameObject {
         super(x, y, width, height);
         initAnimations();
 
-        initInnerHitbox();
+//        initInnerHitbox();
         initFont();
         fireball = new ArrayList<>(5);
+        System.out.println("Player created...");
     }
 
     private void initAnimations() {
@@ -128,61 +132,61 @@ public class Player extends DynamicGameObject {
         jump.setDelay(200);
     }
 
-    private void initInnerHitbox() {
-        //RED
-        topHitbox = new Rectangle.Float();
-        //WHITE
-        bottomHitbox = new Rectangle.Float();
-        //YELLOW
-        leftHitbox = new Rectangle.Float();
-        //DARK GRAY
-        rightHitbox = new Rectangle.Float();
-        updateInnerHitbox();
+    /*
+     private void initInnerHitbox() {
+     //RED
+     topHitbox = new Rectangle.Float();
+     //WHITE
+     bottomHitbox = new Rectangle.Float();
+     //YELLOW
+     leftHitbox = new Rectangle.Float();
+     //DARK GRAY
+     rightHitbox = new Rectangle.Float();
+     updateInnerHitbox();
 
-        //Check if any of the inner rectangles intercept
-        System.out.println("top + bottom intercept? -> "
-                + topHitbox.intersects(bottomHitbox));
-        System.out.println("top + right intercept? -> "
-                + topHitbox.intersects(rightHitbox));
-        System.out.println("right + bottom intercept? -> "
-                + rightHitbox.intersects(bottomHitbox));
-        System.out.println("top + left intercept? -> "
-                + topHitbox.intersects(leftHitbox));
-        System.out.println("left + bottom intercept? -> "
-                + rightHitbox.intersects(leftHitbox));
-    }
+     //Check if any of the inner rectangles intercept
+     System.out.println("top + bottom intercept? -> "
+     + topHitbox.intersects(bottomHitbox));
+     System.out.println("top + right intercept? -> "
+     + topHitbox.intersects(rightHitbox));
+     System.out.println("right + bottom intercept? -> "
+     + rightHitbox.intersects(bottomHitbox));
+     System.out.println("top + left intercept? -> "
+     + topHitbox.intersects(leftHitbox));
+     System.out.println("left + bottom intercept? -> "
+     + rightHitbox.intersects(leftHitbox));
+     }
 
-    public void updateInnerHitbox() {
-        //create inner hitbox to determin left, right top bottom collision
-        float w = bounds.width / 4;
-        float h = bounds.height / 2;
+     public void updateInnerHitbox() {
+     //create inner hitbox to determin left, right top bottom collision
+     float w = bounds.width / 4;
+     float h = bounds.height / 2;
 
-//        //RED
-        topHitbox.x = (bounds.x + bounds.width / 2) - (w);
-        topHitbox.y = bounds.y;
-        topHitbox.width = w * 2;
-        topHitbox.height = h / 2;
-        //WHITE
-        bottomHitbox.x = (bounds.x + bounds.width / 2) - (w * 3) / 2;
-        bottomHitbox.y = bounds.y + bounds.height - h / 2;
-        bottomHitbox.width = w * 3;
-        bottomHitbox.height = h / 2;
-        //YELLOW
-//        System.out.println("old: " + ((bounds.x + bounds.width / 2) - w - w));
-//        System.out.println("new: " + bounds.x);
-        leftHitbox.x = bounds.x;
-        leftHitbox.y = bounds.y + h / 2;
-        leftHitbox.width = w;
-        leftHitbox.height = h;
-        //GREEN
-//        System.out.println("old: "+((bounds.x + bounds.width / 2) - w + w * 2));
-//        System.out.println("nes: "+((bounds.x + bounds.width) - leftHitbox.width));
-        rightHitbox.x = (bounds.x + bounds.width) - leftHitbox.width;
-        rightHitbox.y = bounds.y + h / 2;
-        rightHitbox.width = w;
-        rightHitbox.height = h;
-    }
-
+     //        //RED
+     topHitbox.x = (bounds.x + bounds.width / 2) - (w);
+     topHitbox.y = bounds.y;
+     topHitbox.width = w * 2;
+     topHitbox.height = h / 2;
+     //WHITE
+     bottomHitbox.x = (bounds.x + bounds.width / 2) - (w * 3) / 2;
+     bottomHitbox.y = bounds.y + bounds.height - h / 2;
+     bottomHitbox.width = w * 3;
+     bottomHitbox.height = h / 2;
+     //YELLOW
+     //        System.out.println("old: " + ((bounds.x + bounds.width / 2) - w - w));
+     //        System.out.println("new: " + bounds.x);
+     leftHitbox.x = bounds.x;
+     leftHitbox.y = bounds.y + h / 2;
+     leftHitbox.width = w;
+     leftHitbox.height = h;
+     //GREEN
+     //        System.out.println("old: "+((bounds.x + bounds.width / 2) - w + w * 2));
+     //        System.out.println("nes: "+((bounds.x + bounds.width) - leftHitbox.width));
+     rightHitbox.x = (bounds.x + bounds.width) - leftHitbox.width;
+     rightHitbox.y = bounds.y + h / 2;
+     rightHitbox.width = w;
+     rightHitbox.height = h;
+     }*/
     private void updateFireballs(float deltaTime) {
         int size = fireball.size();
         Fireball ball;
@@ -208,93 +212,191 @@ public class Player extends DynamicGameObject {
 //        this.grounded = val;
     }
 
-    public void doInnerColCheck(Rectangle.Float wall) {
-//        System.out.println("inner");
-        //top
-        if (topHitbox.intersects(wall)) {
-//            System.out.println("top");
-            velocity.y = 0;
-            bounds.y = wall.y + wall.height;
-        }
-        //left
-        if (leftHitbox.intersects(wall)) {
-//            System.out.println("left");
-            velocity.x = 0;
-            bounds.x = wall.x + wall.width + 1;   //could remove the 2's
-        }
-        //right
-        if (rightHitbox.intersects(wall)) {
-//            System.out.println("right");
-            velocity.x = 0;
-            bounds.x = wall.x - bounds.width - 1; //removes the 2's
-        }
-        
-        if (bottomHitbox.intersects(wall)) {
-            if (velocity.y > 0) {
-//            System.out.println("bot");
-                grounded = true;
-                velocity.y = 0;
-                bounds.y = wall.y - bounds.height;
-//            Camera.cameraState = Camera.STATE_SHAKE;
-            } else {
-                System.out.println("NOO, IM MOVING UP, do not snap me pls");
-            }
-        }
+    public void jump() {
+        playerState = STATE_JUMP;
+        velocity.y = -JUMP_HEIGHT + 100;  //impulse up
+        jump.resetAnimation();
     }
 
+    /*
+     public void doInnerColCheck(Rectangle.Float wall) {
+     //        System.out.println("inner");
+     //top
+     if (topHitbox.intersects(wall)) {
+     //            System.out.println("top");
+     velocity.y = 0;
+     bounds.y = wall.y + wall.height;
+     }
+     //left
+     if (leftHitbox.intersects(wall)) {
+     //            System.out.println("left");
+     velocity.x = 0;
+     bounds.x = wall.x + wall.width + 1;   //could remove the 2's
+     }
+     //right
+     if (rightHitbox.intersects(wall)) {
+     //            System.out.println("right");
+     velocity.x = 0;
+     bounds.x = wall.x - bounds.width - 1; //removes the 2's
+     }
+
+     if (bottomHitbox.intersects(wall)) {
+     if (velocity.y > 0) {
+     //            System.out.println("bot");
+     grounded = true;
+     velocity.y = 0;
+     bounds.y = wall.y - bounds.height;
+     //            Camera.cameraState = Camera.STATE_SHAKE;
+     } else {
+     System.out.println("NOO, IM MOVING UP, do not snap me pls");
+     }
+     }
+     }*/
     public void handleInput() {
         //Walk input
         if (Input.isKeyPressed(KeyEvent.VK_A)) {
-            facingRight = false;
-//            System.out.println("A");
-            playerState = STATE_WALK;
-            velocity.x = -WALK_SPEED;
-
-            //Make player run left
-            if (Input.isKeyPressed(KeyEvent.VK_M)) {
-//                System.out.println("Left_RUN");
-                playerState = STATE_RUN;
-                velocity.x = -RUN_SPEED;
-            } else if (Input.isKeyReleased(KeyEvent.VK_M)) {
+            if (playerState != STATE_WALK) {
+                System.out.println("Left walk");
+                facingRight = false;
                 playerState = STATE_WALK;
                 velocity.x = -WALK_SPEED;
             }
-        } else if (Input.isKeyPressed(KeyEvent.VK_F)) { //VK_D seems broken
-            facingRight = true;
-//            System.out.println("D");
-            playerState = STATE_WALK;
-            velocity.x = WALK_SPEED;
-
-            //Make player run right
+            //Make player run left
             if (Input.isKeyPressed(KeyEvent.VK_M)) {
-//                System.out.println("Right_RUN");
-                playerState = STATE_RUN;
-                velocity.x = RUN_SPEED;
-                //CAN NOT RUN TR AND JUMP
-
+                if (playerState != STATE_RUN) {
+                    System.out.println("Left run");
+                    playerState = STATE_RUN;
+                    velocity.x = -RUN_SPEED;
+                }
             } else if (Input.isKeyReleased(KeyEvent.VK_M)) {
+                if (playerState != STATE_WALK) {
+                    System.out.println("walk");
+                    playerState = STATE_WALK;
+                    velocity.x = -WALK_SPEED;
+                }
+            }
+        } else if (Input.isKeyPressed(KeyEvent.VK_F)) { //VK_D seems broken
+            if (playerState != STATE_WALK) {
+                System.out.println("right walk");
+                facingRight = true;
                 playerState = STATE_WALK;
                 velocity.x = WALK_SPEED;
             }
-        } else {
-            playerState = STATE_IDLE;
-            velocity.x = 0;
+            //Make player run right
+            if (Input.isKeyPressed(KeyEvent.VK_M)) {
+                if (playerState != STATE_RUN) {
+                    System.out.println("Right run");
+                    playerState = STATE_RUN;
+                    velocity.x = RUN_SPEED;
+                    //CAN NOT RUN TR AND JUMP (keyboard error)
+                }
+            } else if (Input.isKeyReleased(KeyEvent.VK_M)) {
+                if (playerState != STATE_WALK) {
+                    System.out.println("walk");
+                    playerState = STATE_WALK;
+                    velocity.x = WALK_SPEED;
+                }
+            }
+        }
+        if (Input.isKeyReleased(KeyEvent.VK_A) || Input.isKeyReleased(KeyEvent.VK_F)) {
+            if (playerState != STATE_IDLE) {
+                System.out.println("idle");
+                playerState = STATE_IDLE;
+                velocity.x = 0;
+            }
         }
 
         //Testing jump code here
         if (Input.isKeyTyped(KeyEvent.VK_SPACE)) {
 //            System.out.println("JUMP!");
             if (grounded) {
-                playerState = STATE_JUMP;
-                velocity.y = -JUMP_HEIGHT;  //impulse up
-                grounded = false;
+                if (playerState != STATE_JUMP) {
+                    playerState = STATE_JUMP;
+                    velocity.y = -JUMP_HEIGHT;  //impulse up
+                    grounded = false;
 //                System.out.println("JUMP!");
+                    jump.resetAnimation();
+                }
             }
-            jump.resetAnimation();
         }
 
         if (Input.isKeyReleased(KeyEvent.VK_SPACE)) {
             playerState = STATE_FALLING;
+            //If player released jump key while jumping up
+            if (velocity.y < 0) {
+                velocity.y *= 0.5;
+            }
+        }
+
+        //create firball
+        if (Input.isKeyTyped(KeyEvent.VK_B)) {
+            if (fireball.size() < 5) {
+                //Do I need a add a new instance? object pool?
+                fireball.add(new Fireball(bounds.x, bounds.y, 32, 32, facingRight));
+            }
+        }
+    }
+
+    public void handleInput2() {
+//        System.out.println("grounded: " + grounded);
+
+        if (Input.isKeyPressed(KeyEvent.VK_A) && Input.isKeyPressed(KeyEvent.VK_M)) {
+            //Move left
+            if (playerState != STATE_RUN) {
+                System.out.println("Left run");
+                facingRight = false;
+                playerState = STATE_RUN;
+                velocity.x = -RUN_SPEED;
+            }
+        } else if (Input.isKeyPressed(KeyEvent.VK_F) && Input.isKeyPressed(KeyEvent.VK_M)) {
+            //Move right
+            if (playerState != STATE_RUN) {
+                facingRight = true;
+                System.out.println("Right run");
+                playerState = STATE_RUN;
+                velocity.x = RUN_SPEED;
+            }
+        } else if (Input.isKeyPressed(KeyEvent.VK_A)) {
+            //Walk input
+            if (playerState != STATE_WALK) {
+                System.out.println("Left walk");
+                facingRight = false;
+                playerState = STATE_WALK;
+                velocity.x = -WALK_SPEED;
+            }
+        } else if (Input.isKeyPressed(KeyEvent.VK_F)) { //VK_D seems broken
+            if (playerState != STATE_WALK) {
+                System.out.println("right walk");
+                facingRight = true;
+                playerState = STATE_WALK;
+                velocity.x = WALK_SPEED;
+            }
+        }
+        //Check for release of walk keys
+        if (Input.isKeyReleased(KeyEvent.VK_A) || Input.isKeyReleased(KeyEvent.VK_F)) {
+            if (playerState != STATE_IDLE) {
+                System.out.println("idle");
+                playerState = STATE_IDLE;
+                velocity.x = 0;
+            }
+        }
+
+        //Testing jump code here
+        if (Input.isKeyTyped(KeyEvent.VK_SPACE) || Input.isKeyTyped(KeyEvent.VK_W)) {
+//            System.out.println("JUMP!");
+            if (grounded) {
+                if (playerState != STATE_JUMP) {
+                    playerState = STATE_JUMP;
+                    velocity.y = -JUMP_HEIGHT;  //impulse up
+                    grounded = false;
+                    System.out.println("JUMP!");
+                    jump.resetAnimation();
+                }
+            }
+        }
+
+        if (Input.isKeyReleased(KeyEvent.VK_SPACE)) {
+//            playerState = STATE_FALLING;
             //If player released jump key while jumping up
             if (velocity.y < 0) {
                 velocity.y *= 0.5;
@@ -318,25 +420,28 @@ public class Player extends DynamicGameObject {
      */
     @Override
     public void gameUpdate(float deltaTime) {
+//        System.out.println(playerState);
         //Move player otter hitbox
         position.add(velocity.x * deltaTime, velocity.y * deltaTime);
         bounds.x += (velocity.x * deltaTime);
         bounds.y += (velocity.y * deltaTime);
 
-//        //Handle collision AFTER we commit our movement
 //        //Update players inner hitbox
-        updateInnerHitbox();
-
+//        updateInnerHitbox();
         //If player is not on the ground, he is falling
-        if (!grounded) {
-            playerState = STATE_FALLING;
+        if (!grounded /*&& velocity.y > 0*/) {
+            if (playerState != STATE_FALLING) {
+//                System.out.println("vel.y:" + velocity.y);
+                playerState = STATE_FALLING;
+                System.out.println("FALL!");
+            }
         }
-        //Apply gravity if player is falling or jumping
-        if (playerState == STATE_FALLING || playerState == STATE_JUMP) {
-            //velocity never faster than 25m/s
-            velocity.y += Level.gravity.y * deltaTime;
-            velocity.y = Helper.Clamp(velocity.y, -TERMINAL_VELOCITY * 3, TERMINAL_VELOCITY * 3);
-        }
+//        if (!grounded /*&& velocity.y < 0*/) {
+//            if (playerState != STATE_JUMP) {
+//                playerState = STATE_JUMP;
+////                System.out.println("jump");
+//            }
+//        }
 
         switch (playerState) {
             case STATE_IDLE:
@@ -350,6 +455,7 @@ public class Player extends DynamicGameObject {
                 walk.update(deltaTime);
                 break;
             case STATE_RUN:
+                idleCounter = 0;
                 walk.setDelay(50);  //doesn't work with dt
                 walk.update(deltaTime);
                 break;
@@ -357,14 +463,18 @@ public class Player extends DynamicGameObject {
             case STATE_FALLING:
                 idleCounter = 0;
                 jump.update(deltaTime);
+                //Apply gravity if player is falling or jumping
+                //velocity never faster than 25m/s
+                velocity.y += Level.gravity.y * deltaTime;
+                velocity.y = Helper.Clamp(velocity.y, -TERMINAL_VELOCITY * 3, TERMINAL_VELOCITY * 3);
                 break;
             case STATE_DEAD:
                 break;
         }
 
-//        collision_one();
         //Update firballs
         updateFireballs(deltaTime);
+        //Handle collision AFTER we commit our movement
     }
 
     @Override
@@ -391,15 +501,15 @@ public class Player extends DynamicGameObject {
         g.setColor(Color.BLUE);
         g.draw(bounds);
 
-        //Draw inner hit boxes
-        g.setColor(Color.ORANGE);
-        g.fill(leftHitbox);
-        g.setColor(Color.GREEN);
-        g.fill(rightHitbox);
-        g.setColor(Color.RED);
-        g.fill(topHitbox);
-        g.setColor(Color.WHITE);
-        g.fill(bottomHitbox);
+//        //Draw inner hit boxes
+//        g.setColor(Color.ORANGE);
+//        g.fill(leftHitbox);
+//        g.setColor(Color.GREEN);
+//        g.fill(rightHitbox);
+//        g.setColor(Color.RED);
+//        g.fill(topHitbox);
+//        g.setColor(Color.WHITE);
+//        g.fill(bottomHitbox);
     }
 
     private void drawRender(Graphics2D g) {
@@ -412,16 +522,21 @@ public class Player extends DynamicGameObject {
                             (int) bounds.width, (int) bounds.height, null);
                 } else {
                     //Otherwise draw normal idle animation
+
                     if (facingRight) {
                         g.drawImage(idle.getImage(), (int) (bounds.x + bounds.width), (int) bounds.y,
                                 -(int) bounds.width, (int) bounds.height, null);
                     } else {
-                        g.drawImage(idle.getImage(), (int) bounds.x, (int) bounds.y,
+                        g.drawImage(idle.getImage(), (int) (bounds.x), (int) bounds.y,
                                 (int) bounds.width, (int) bounds.height, null);
                     }
+
                 }
                 break;
             case STATE_WALK:
+//                int sign = Helper.Sign(velocity.x);
+//                System.out.println("sign: " + sign);
+
                 if (facingRight) {
                     g.drawImage(walk.getImage(), (int) (bounds.x + bounds.width), (int) bounds.y,
                             -(int) bounds.width, (int) bounds.height, null);
@@ -451,7 +566,7 @@ public class Player extends DynamicGameObject {
                 break;
             case STATE_DEAD:
                 g.drawOval((int) bounds.x, (int) bounds.y,
-                            (int) bounds.width, (int) bounds.height);
+                        (int) bounds.width, (int) bounds.height);
                 break;
         }
 //        g.drawImage(playerImg, (int) bounds.x, (int) bounds.y, null);

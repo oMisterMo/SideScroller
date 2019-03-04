@@ -10,33 +10,32 @@ import java.util.ArrayList;
 import java.util.List;
 import static sidescroller.GamePanel.GAME_HEIGHT;
 import static sidescroller.GamePanel.GAME_WIDTH;
-import static sidescroller.GamePanel.WORLD_STATE_GAMEOVER;
 
 /**
  * Newly created world class to store the games simulation
  *
  * 28-Nov-2017, 20:53:51.
  *
- * @author Mo
+ * @author Mohammed Ibrahim
  */
 public class World extends GameObject {
 
-    //GAME VARIABLES HERE-------------------------------------------------------
-    private float scaleTime = 1;
-    private Color backgroundColor;    //Represents colour of background
+    private float scaleTime = 1f;
+    private Color backgroundColor;
 
     private SpatialHashGrid grid;
     private int numOfCollision = 0;
 //    private Assets assets;    //Not needed here
     private Camera camera;
-//    private World world;
     private Level level;
-    private Player player;
+    public Player player;       //make private
     private Clouds clouds;
     private List<Thwomp> thwomps;
+    private Mole mole;
+
+    private Point p = new Point();      //Stores the location of a tile
 
     //Debuggin
-    private Point p = new Point();
     private int[] coord = new int[2];   //prob do not need
     private int[] coord2 = new int[2];  //prob do not need
     private boolean drawTemp = false;
@@ -44,23 +43,23 @@ public class World extends GameObject {
     private Tile[] drawTiles = new Tile[6];
 
     public World() {
-        //initialise varialbes
         init();
+        System.out.println("World loaded...");
     }
 
     private void init() {
-//        assets = new Assets();
-        Assets.loadImages();
 //        world = new World();
         level = new Level();
         player = new Player(150,
-                GamePanel.GAME_HEIGHT - Tile.TILE_HEIGHT * 2 - 80,
+                GAME_HEIGHT - Tile.TILE_HEIGHT * 6,
                 Player.PLAYER_WIDTH,
                 Player.PLAYER_HEIGHT);
         thwomps = new ArrayList<>();
+        int offset = 120;
         for (int i = 0; i < 20; i++) {
-            thwomps.add(new Thwomp(180 + (i * Thwomp.THOWMP_WIDTH), 0, Thwomp.THOWMP_WIDTH, Thwomp.THOWMP_HEIGHT, player));
+            thwomps.add(new Thwomp(230 + (i * Thwomp.THOWMP_WIDTH), (i % 2 == 0) ? offset : 0, Thwomp.THOWMP_WIDTH, Thwomp.THOWMP_HEIGHT, player));
         }
+        mole = new Mole(1000, GAME_HEIGHT - Tile.TILE_HEIGHT * 2 - 100, Mole.MOLE_WIDTH, Mole.MOLE_HEIGHT);
         clouds = new Clouds();
         camera = new Camera(player, new Vector2D());
 
@@ -73,7 +72,7 @@ public class World extends GameObject {
     private void initGrid() {
         grid = new SpatialHashGrid(GAME_WIDTH * 2, GAME_HEIGHT, 300);    //Cell size (200 pixels)
         //Add all static tiles
-        int numStaticObjects = 0;
+        int numStaticObjects = 0;   //debugging only
         for (int y = 0; y < Level.NO_OF_TILES_Y; y++) {
             for (int x = 0; x < Level.NO_OF_TILES_X; x++) {
                 Tile t = level.getTile(x, y);
@@ -83,10 +82,10 @@ public class World extends GameObject {
                 }
             }
         }
+
+        //debuggin only
         System.out.println("No of static objects added: " + numStaticObjects);
-        System.out.println("No of static cells: " + grid.staticCells.length);
-        int n = 10;
-        System.out.println("Cell " + n + " contains: " + grid.staticCells[n].size() + " objects");
+        grid.printInfo();
         //Add dynamic object (player)
 //        grid.insertDynamicObject(player);
     }
@@ -107,15 +106,36 @@ public class World extends GameObject {
             setBackgroundColor(100, 120, 100, 255);
         }
         if (Input.isKeyTyped(KeyEvent.VK_R)) {
-//            reset();
+            reset();
         }
         if (Input.isKeyTyped(KeyEvent.VK_I)) {
             setDebugTiles();
         }
-        
+
         //Handle sub class input
-        player.handleInput();
+//        player.handleInput();
+        player.handleInput2();
         level.handleInput();
+    }
+
+    private void reset() {
+        System.out.println("RESET");
+        player.position.x = 150;
+        player.position.y = GAME_HEIGHT - Tile.TILE_HEIGHT * 6;
+        player.bounds.x = player.position.x;
+        player.bounds.y = player.position.y;
+        player.velocity.x = 0;
+        player.velocity.y = 0;
+        player.grounded = false;
+        player.playerState = Player.STATE_FALLING;
+        System.out.println("fall (from reset)");
+
+//        mole.position.x = 1000;
+//        mole.position.y = 400;
+//        mole.bounds.y = 400;
+//        mole.velocity.x = 100;
+//        mole.velocity.y = 0;
+//        mole.moleState = Mole.STATE_FALL;
     }
 
     private void setDebugTiles() {
@@ -148,29 +168,6 @@ public class World extends GameObject {
         drawTemp = true;
     }
 
-    @Override
-    void gameUpdate(float deltaTime) {
-        //********** Do updates HERE **********
-        deltaTime *= scaleTime; //Objects that are slow mo after this line
-//        updateCounter(deltaTime);
-
-        camera.gameUpdate(deltaTime);
-//        world.gameUpdate(deltaTime);
-        level.gameUpdate(deltaTime);
-        clouds.gameUpdate(deltaTime);
-        player.gameUpdate(deltaTime);
-        for (Thwomp t : thwomps) {
-            t.gameUpdate(deltaTime);
-        }
-//        updateRandomThings();
-
-//        //Check for collisions
-//        handleCollisions(deltaTime);
-//        handleCollisionHashgrid();
-        handleCollisions3(deltaTime);
-        checkGameover();
-    }
-
     private void updateCounter(float deltaTime) {
         if (drawTemp) {
             counter += deltaTime;
@@ -183,16 +180,17 @@ public class World extends GameObject {
     private void handleCollisions3(float deltaTime) {
         playerCollision();
         thwompCollision();
+        moleCollision();
     }
 
     private void playerCollision() {
         xCol(player);
         yCol(player);
-        checkGrounded(player);
+        checkPlayerGrounded(player);
     }
 
     private void thwompCollision() {
-        //        if (isSolid(pointToTileCoordsX(thwomp.bounds.x + Thwomp.THOWMP_WIDTH / 2), pointToTileCoordsY(thwomp.bounds.y + Thwomp.THOWMP_HEIGHT + 1))) {
+//        if (isSolid(pointToTileCoordsX(thwomp.bounds.x + Thwomp.THOWMP_WIDTH / 2), pointToTileCoordsY(thwomp.bounds.y + Thwomp.THOWMP_HEIGHT + 1))) {
 //            thwomp.velocity.y = 0;
 //        }
         int len = thwomps.size();
@@ -201,6 +199,35 @@ public class World extends GameObject {
             if (thwomp.bounds.intersects(player.bounds)) {
 //                System.out.println("HIT");
                 player.playerState = Player.STATE_DEAD;
+            }
+        }
+    }
+
+    private void moleCollision() {
+//        xCol(mole);
+//        yCol(mole);
+        //Mole world collisions
+        int amt = 1;
+        if (tileAdjIsBlocking(mole, "bot", amt) && mole.velocity.y > 0) {
+            //Handle bottom collision here
+            System.out.println("mole hit floor");
+            mole.velocity.y = 0;
+            mole.grounded = true;
+            mole.moleState = Mole.STATE_WALK;
+            //Push object out of tile
+            while (tileAdjIsBlocking(mole, "bot", amt)) {
+//                System.out.println("to touch");
+                mole.position.y -= 1;
+                mole.bounds.y -= 1;
+            }
+        }
+
+        //Mole player collision
+        if (player.bounds.intersects(mole.bounds)) {
+            //We hit the mole
+            if (player.velocity.y > 0 && player.position.y + Player.PLAYER_HEIGHT < mole.position.y + 10) {
+                //If player is falling && player.y < mole.y + (jump buffer)
+                player.jump();
             }
         }
     }
@@ -226,48 +253,48 @@ public class World extends GameObject {
         }
     }
 
+    //Checks collision with 4 solid tiles (two above, two below)
     private void yCol(DynamicGameObject obj) {
 //        Tile current = worldToTile(player.bounds.x, player.bounds.y);
-        Player oPlayer = (Player) obj;
+        Player plyr = (Player) obj;
         int amt = 1;
         if (tileAdjIsBlocking(obj, "bot", amt) && obj.velocity.y > 0) {
-            oPlayer.velocity.y = 0;
-            oPlayer.grounded = true;
+            //Handle bottom collision here
+            obj.velocity.y = 0;
+            obj.grounded = true;
+            plyr.playerState = Player.STATE_IDLE;
+            System.out.println("idle (after hitting floor)");
+
+            //Push object out of tile
             while (tileAdjIsBlocking(obj, "bot", amt)) {
 //                System.out.println("to touch");
                 obj.position.y -= 1;
                 obj.bounds.y -= 1;
             }
         } else if (tileAdjIsBlocking(obj, "top", amt) && obj.velocity.y < 0) {
-            oPlayer.velocity.y = 0;
+            obj.velocity.y = 0;
             while (tileAdjIsBlocking(obj, "top", amt)) {
 //                System.out.println("to touch");
                 obj.position.y += 1;
-                oPlayer.bounds.y += 1;
+                obj.bounds.y += 1;
             }
         }
     }
 
     //First function to get called during collision detection
-    private boolean tileAdjIsBlocking(DynamicGameObject player, String dir, int amount) {
+    private boolean tileAdjIsBlocking(DynamicGameObject obj, String dir, int amount) {
         //Use StringBuilder to concatinate strings
         switch (dir) {
             case "left":
             case "right":
                 //Handle left/Right collision
-//                tileCoordsAdj(player, dir, amount, coord);
-//                return (isSolid(coord[0], coord[1]));
-                //Replace with one line below
-                return ((isSolid(tileCoordsAdj(player, dir + "Up", amount, p)))
-                        || (isSolid(tileCoordsAdj(player, dir + "Down", amount, p))));
+                return ((isSolid(tileCoordsAdj(obj, dir + "Up", amount, p)))
+                        || (isSolid(tileCoordsAdj(obj, dir + "Down", amount, p))));
             case "bot":
             case "top":
                 //Handle up/down collision
-//                tileCoordsAdj(player, dir + "Left", amount, coord);
-//                tileCoordsAdj(player, dir + "Right", amount, coord2);
-//                return (isSolid(coord[0], coord[1]) || isSolid(coord2[0], coord2[1]));
-                return (isSolid(tileCoordsAdj(player, dir + "Left", amount, p))
-                        || isSolid(tileCoordsAdj(player, dir + "Right", amount, p)));
+                return (isSolid(tileCoordsAdj(obj, dir + "Left", amount, p))
+                        || isSolid(tileCoordsAdj(obj, dir + "Right", amount, p)));
         }
         return false;
     }
@@ -283,7 +310,7 @@ public class World extends GameObject {
 //    public int[] tileCoordsAdj(DynamicGameObject player, String dir) {
 //        return tileCoordsAdj(player, dir, 1);
 //    }
-    public int[] tileCoordsAdj(DynamicGameObject player, String dir, int amount, int[] adj) {
+    public int[] tileCoordsAdj(DynamicGameObject obj, String dir, int amount, int[] adj) {
         //Long ass function
         //Given a player and a positin (String) -> returns the tileCoordsForPoint
         float x = 0;    //reset
@@ -296,30 +323,30 @@ public class World extends GameObject {
         switch (dir) {
             case "left":
 //                System.out.println("left");
-                x = player.bounds.x - amount;
-                y = player.bounds.y + player.bounds.height / 2;
+                x = obj.bounds.x - amount;
+                y = obj.bounds.y + obj.bounds.height / 2;
                 break;
             case "right":
-                x = player.bounds.x + player.bounds.width + amount;
-                y = player.bounds.y + player.bounds.height / 2;
+                x = obj.bounds.x + obj.bounds.width + amount;
+                y = obj.bounds.y + obj.bounds.height / 2;
                 break;
             case "botLeft":
 //                System.out.println("botLeft");
-                x = player.bounds.x;
-                y = (player.bounds.y + player.bounds.height) + amount;
+                x = obj.bounds.x;
+                y = (obj.bounds.y + obj.bounds.height) + amount;
                 break;
             case "botRight":
 //                System.out.println("botRight");
-                x = (player.bounds.x + player.bounds.width);
-                y = (player.bounds.y + player.bounds.height) + amount;
+                x = (obj.bounds.x + obj.bounds.width);
+                y = (obj.bounds.y + obj.bounds.height) + amount;
                 break;
             case "topLeft":
-                x = player.bounds.x;
-                y = (player.bounds.y) + amount;
+                x = obj.bounds.x;
+                y = (obj.bounds.y) + amount;
                 break;
             case "topRight":
-                x = (player.bounds.x + player.bounds.width);
-                y = (player.bounds.y) + amount;
+                x = (obj.bounds.x + obj.bounds.width);
+                y = (obj.bounds.y) + amount;
                 break;
         }
         adj[0] = pointToTileCoordsX(x);
@@ -329,7 +356,7 @@ public class World extends GameObject {
         return adj;
     }
 
-    public Point tileCoordsAdj(DynamicGameObject player, String dir, int amount, Point p) {
+    public Point tileCoordsAdj(DynamicGameObject obj, String dir, int amount, Point p) {
         //Long ass function
         //Given a player and a positin (String) -> returns the tileCoordsForPoint
         float x = 0;    //reset
@@ -342,39 +369,39 @@ public class World extends GameObject {
         switch (dir) {
             case "leftUp":
 //                System.out.println("left");
-                x = player.bounds.x;
-                y = player.bounds.y + amount + 5;
+                x = obj.bounds.x;
+                y = obj.bounds.y + amount + 5;
                 break;
             case "leftDown":
 //                System.out.println("left");
-                x = player.bounds.x;
-                y = (player.bounds.y + player.bounds.height) - amount - 5;
+                x = obj.bounds.x;
+                y = (obj.bounds.y + obj.bounds.height) - amount - 5;
                 break;
             case "rightUp":
-                x = (player.bounds.x + player.bounds.width);
-                y = player.bounds.y + amount + 5;
+                x = (obj.bounds.x + obj.bounds.width);
+                y = obj.bounds.y + amount + 5;
                 break;
             case "rightDown":
-                x = (player.bounds.x + player.bounds.width);
-                y = (player.bounds.y + player.bounds.height) - amount - 5;
+                x = (obj.bounds.x + obj.bounds.width);
+                y = (obj.bounds.y + obj.bounds.height) - amount - 5;
                 break;
             case "botLeft":
 //                System.out.println("botLeft");
-                x = player.bounds.x;
-                y = (player.bounds.y + player.bounds.height) + amount;
+                x = obj.bounds.x;
+                y = (obj.bounds.y + obj.bounds.height) + amount;
                 break;
             case "botRight":
 //                System.out.println("botRight");
-                x = (player.bounds.x + player.bounds.width);
-                y = (player.bounds.y + player.bounds.height) + amount;
+                x = (obj.bounds.x + obj.bounds.width);
+                y = (obj.bounds.y + obj.bounds.height) + amount;
                 break;
             case "topLeft":
-                x = player.bounds.x;
-                y = (player.bounds.y) + amount;
+                x = obj.bounds.x;
+                y = (obj.bounds.y) + amount;
                 break;
             case "topRight":
-                x = (player.bounds.x + player.bounds.width);
-                y = (player.bounds.y) + amount;
+                x = (obj.bounds.x + obj.bounds.width);
+                y = (obj.bounds.y) + amount;
                 break;
         }
         p.x = pointToTileCoordsX(x);
@@ -400,21 +427,38 @@ public class World extends GameObject {
         return level.getTile(pointToTileCoordsX(x), pointToTileCoordsY(y));
     }
 
-    private void checkGrounded(DynamicGameObject obj) {
+    //FIX ME -> STATE MACHINE
+    private void checkPlayerGrounded(DynamicGameObject obj) {
         //Change bottomHitbox to oPlayer.bounds
-        int amt = -4;
+        int offset = 2;//How far from the bottom points from the player
         Player oPlayer = (Player) obj;
-        Tile botLeft = worldToTile(oPlayer.bottomHitbox.x + amt, oPlayer.bottomHitbox.y + Player.PLAYER_HEIGHT);
-        Tile botRight = worldToTile(oPlayer.bottomHitbox.x + oPlayer.bottomHitbox.width - amt, oPlayer.bottomHitbox.y + Player.PLAYER_HEIGHT);
+//        System.out.println("checkPlayerGrounded()");
+//        System.out.println("bottom hitbox: "+oPlayer.bounds.x +", "+oPlayer.bounds.y);
+//        System.out.println("bounds: "+oPlayer.bounds.x +", "+oPlayer.bounds.y);
+        Tile botLeft = worldToTile(oPlayer.bounds.x +offset, 
+                oPlayer.bounds.y + Player.PLAYER_HEIGHT + offset);
+        Tile botRight = worldToTile(oPlayer.bounds.x + 
+                oPlayer.bounds.width -offset, 
+                oPlayer.bounds.y + Player.PLAYER_HEIGHT + offset);
         if (!botLeft.solid && !botRight.solid) {
 //            System.out.println("grounded = false");
+            oPlayer.playerState = Player.STATE_FALLING;
             oPlayer.grounded = false;
+//            if (oPlayer.playerState != Player.STATE_JUMP 
+//                    || oPlayer.playerState != Player.STATE_FALLING) {
+//                oPlayer.playerState = Player.STATE_FALLING;
+//                System.out.println("fall [from no tiles beneath]");
+//            }
         }
     }
 
     private void checkGameover() {
+        if (player.position.y > GamePanel.GAME_HEIGHT + 50) {
+            player.playerState = Player.STATE_DEAD;
+        }
         if (player.playerState == Player.STATE_DEAD) {
 //            state = WORLD_STATE_GAMEOVER;
+            reset();
         }
     }
 
@@ -433,38 +477,9 @@ public class World extends GameObject {
                 System.out.println("Player bounds");
 //                worldToTile(player.bottomHitbox.x, player.bottomHitbox.y);
                 worldToTile(player.bounds.x, player.bounds.y);
-                player.doInnerColCheck(collider.bounds);
+//                player.doInnerColCheck(collider.bounds);
             }
         }
-    }
-
-    @Override
-    void gameRender(Graphics2D g) {
-        //Clear screen
-        g.setColor(backgroundColor);
-        g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-        //********** Do drawings HERE **********
-        //When camera moves, so does game world
-        AffineTransform old = g.getTransform();
-//        g.scale(1.5, 1.5);    //also add 300 to cam.pos.y
-
-        //Camera view
-        g.translate(-camera.camPos.x, -camera.camPos.y);
-//        drawRandomThings();
-        clouds.gameRender(g);
-//        world.gameRender(g);
-        level.gameRender(g);
-        player.gameRender(g);
-        for (Thwomp t : thwomps) {
-            t.gameRender(g);
-        }
-        //Draw Debuggin info above other objects
-//        drawHashGrid(g);
-        drawTilesBounds(g);
-        g.translate(+camera.camPos.x, +camera.camPos.y);
-
-        g.setTransform(old);
     }
 
     private void drawTilesBounds(Graphics2D g) {
@@ -491,7 +506,7 @@ public class World extends GameObject {
 
     private void drawHashGrid(Graphics2D g) {
         g.setColor(Color.YELLOW);
-        int cell = (int) grid.cellSize;
+        int cell = (int) grid.getCellSize();
         //draw vertical
         for (int i = cell; i < GAME_WIDTH * 2; i += cell) {
             g.drawLine(i, 0, i, GAME_HEIGHT);
@@ -505,7 +520,61 @@ public class World extends GameObject {
         backgroundColor = new Color(r, g, b, a);
     }
 
+    /**
+     * Only for debugging to get the players information and draw it
+     *
+     * @return player
+     */
     public Player getPlayer() {
         return player;
+    }
+
+    @Override
+    void gameUpdate(float deltaTime) {
+        //********** Do updates HERE **********
+        deltaTime *= scaleTime; //Objects that are slow mo after this line
+        updateCounter(deltaTime);
+
+        camera.gameUpdate(deltaTime);
+        level.gameUpdate(deltaTime);
+        clouds.gameUpdate(deltaTime);
+        player.gameUpdate(deltaTime);
+        for (Thwomp t : thwomps) {
+            t.gameUpdate(deltaTime);
+        }
+        mole.gameUpdate(deltaTime);
+
+//        //Check for collisions
+//        handleCollisionHashgrid();
+        handleCollisions3(deltaTime);
+        checkGameover();
+    }
+
+    @Override
+    void gameRender(Graphics2D g) {
+        //Clear screen
+        g.setColor(backgroundColor);
+        g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+        //********** Do drawings HERE **********
+        //When camera moves, so does game world
+        AffineTransform old = g.getTransform();
+//        g.scale(1.5, 1.5);    //also add 300 to cam.pos.y
+
+        //Camera view
+        g.translate(-camera.camPos.x, -camera.camPos.y);
+        clouds.gameRender(g);
+        level.gameRender(g);
+        player.gameRender(g);
+        for (Thwomp t : thwomps) {
+            t.gameRender(g);
+        }
+        mole.gameRender(g);
+        //Draw Debuggin info above other objects
+//        drawHashGrid(g);
+        drawTilesBounds(g);
+        g.translate(+camera.camPos.x, +camera.camPos.y);
+
+        g.setTransform(old);
     }
 }

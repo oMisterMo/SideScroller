@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package sidescroller;
 
 import java.util.ArrayList;
@@ -11,17 +6,17 @@ import java.util.List;
 /**
  * 12-May-2017, 03:16:10.
  *
- * @author Mo
+ * @author Mohammed Ibrahim
  */
 public class SpatialHashGrid {
 
-    List<StaticGameObject>[] dynamicCells;
-    List<StaticGameObject>[] staticCells;
-    int cellsPerRow;    //ceil(WORLD.WIDTH / cellSize)
-    int cellsPerCol;
-    float cellSize;     //300
-    int[] cellIds = new int[4]; //Cell an object is currently contained in
-    List<StaticGameObject> foundObjects;
+    private List<StaticGameObject>[] dynamicCells;
+    private List<StaticGameObject>[] staticCells;
+    private int cellsPerRow;    //ceil(WORLD.WIDTH / cellSize)
+    private int cellsPerCol;
+    private float cellSize;     //300
+    private int[] cellIds = new int[4]; //Cell an object is currently contained in
+    private List<StaticGameObject> foundObjects;
 //    List<DynamicGameObject> dynamicCells;
 
     @SuppressWarnings("unchecked")
@@ -30,7 +25,7 @@ public class SpatialHashGrid {
         this.cellsPerRow = (int) Math.ceil(worldWidth / cellSize);
         this.cellsPerCol = (int) Math.ceil(worldHeight / cellSize);
         int numOfCells = cellsPerRow * cellsPerCol;
-        
+
         dynamicCells = new List[numOfCells];
         staticCells = new List[numOfCells];
         for (int i = 0; i < numOfCells; i++) {
@@ -199,5 +194,19 @@ public class SpatialHashGrid {
             }
         }
         return cellIds;
+    }
+
+    public float getCellSize() {
+        return cellSize;
+    }
+
+    public void printInfo() {
+        System.out.println("No of static cells: " + staticCells.length);
+        System.out.println("No of dynamic cells: " + dynamicCells.length);
+        int n = 10;
+        System.out.println("Static cell " + n + " contains: " + staticCells[n].size() 
+                + " objects");
+        System.out.println("Dynaimic cell " + n + " contains: " + dynamicCells[n].size() 
+                + " objects");
     }
 }

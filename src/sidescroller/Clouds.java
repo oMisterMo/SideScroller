@@ -11,9 +11,7 @@ import java.awt.image.BufferedImage;
 import java.util.Random;
 
 /**
- * 22-Apr-2017, 15:21:52.
- *
- * @author Mo
+ * @author Mohammed Ibrahim
  */
 public class Clouds extends GameObject {
 

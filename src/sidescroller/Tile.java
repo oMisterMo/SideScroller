@@ -1,7 +1,5 @@
 package sidescroller;
 
-import common.Vector2D;
-import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 /**
@@ -13,7 +11,7 @@ import java.awt.image.BufferedImage;
  *
  * 06-Sep-2016, 23:18:03.
  *
- * @author Mo
+ * @author Mohammed Ibrahim
  */
 public class Tile extends StaticGameObject {
 
@@ -36,34 +34,8 @@ public class Tile extends StaticGameObject {
     public BufferedImage tileImg;
     private int id = -1;
 
-//    public int x;
-//    public int y;
-//    public Rectangle hitbox;
-    public boolean solid = true;
+    public boolean solid = false;
 
-//    public Tile(int x, int y, int id) {
-//        this.x = x;
-//        this.y = y;
-//        this.id = id;
-//
-//        loadImage(id);
-//
-//        if (id != Tile.EMPTY) {
-//            hitbox = new Rectangle(x, y, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-//            solid = true;
-//        }
-//    }
-//    public Tile(Vector2D position, int id) {
-//        this.position = position;
-//        this.id = id;
-//
-//        loadImage(id);
-//
-//        if (id != Tile.EMPTY) {
-//            bounds = new Rectangle.Float(position.x, position.y, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-//            solid = true;
-//        }
-//    }
     public Tile(float x, float y, float width, float height, int id) {
         super(x, y, width, height);
 

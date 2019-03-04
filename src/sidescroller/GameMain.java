@@ -1,17 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package sidescroller;
 
 import javax.swing.JFrame;
 
 /**
- * 06-Sep-2016, 23:03:23.
- *
- * @author Mo
+ * @author Mohammed Ibrahim
  */
 public class GameMain {
 
@@ -19,10 +11,10 @@ public class GameMain {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        //Variables
         JFrame window = new JFrame("2D Scroller");
+        new Assets();
         GamePanel game = new GamePanel();
-        
+
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.add(game);
         window.pack();
@@ -31,7 +23,7 @@ public class GameMain {
         window.setResizable(false);
         window.setVisible(true);
 
-        window.setAlwaysOnTop(true);   
+        window.setAlwaysOnTop(true);
     }
-    
+
 }

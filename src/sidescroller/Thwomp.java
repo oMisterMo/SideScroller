@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package sidescroller;
 
 import common.Vector2D;
@@ -11,7 +6,7 @@ import java.awt.Graphics2D;
 /**
  * 26-Nov-2017, 16:21:47.
  *
- * @author Mo
+ * @author Mohammed Ibrahim
  */
 public class Thwomp extends DynamicGameObject {
 
@@ -33,6 +28,11 @@ public class Thwomp extends DynamicGameObject {
         super(x, y, width, height);
 //        position.set(x, y);
         originalHeight = y;
+//        initRayCast();
+        this.player = player;
+    }
+
+    private void initRayCast() {
         //Set raycast
         rayCast.x = bounds.x;
         rayCast.y = bounds.y;
@@ -46,7 +46,6 @@ public class Thwomp extends DynamicGameObject {
         rayCast2.x = bounds.x + bounds.width;
         rayCast2.y = bounds.y;
         rayCast2.setLength(150);
-        this.player = player;
     }
 
     public boolean isWithinWarningRange(DynamicGameObject player) {
@@ -85,8 +84,8 @@ public class Thwomp extends DynamicGameObject {
         stateTime += deltaTime;
 //        System.out.println(stateTime);
     }
-    
-    public void update(){
+
+    public void update() {
         //AN ENEMY SHOULD ENCAPSULATE ALL ITS BEHAVIOUS!! 
         if (isWithinActiveRange(player)) {
             if (state != Thwomp.STATE_ACTIVE) {

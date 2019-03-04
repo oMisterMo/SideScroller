@@ -5,9 +5,7 @@ import common.Tween;
 import common.Vector2D;
 
 /**
- * 06-Dec-2016, 04:43:06.
- *
- * @author Mo
+ * @author Mohammed Ibrahim
  */
 public class Camera {
 
@@ -35,6 +33,7 @@ public class Camera {
     }
 
     public void gameUpdate(float deltaTime) {
+        //Update position
         switch (cameraState) {
             case STATE_DEFAULT:
                 followPlayer(deltaTime);
@@ -43,9 +42,7 @@ public class Camera {
                 shake(deltaTime);
                 break;
         }
-
-        //Test camera position
-//        System.out.println(camPos);
+        //Clamp camera to world
         camPos.x = (float) Math.floor(Helper.Clamp(camPos.x, 0, 1280)); //Math.floor -> to avoid shake (walking into wall)
 //        camPos.y = Helper.Clamp(camPos.y, -200, 0);
     }
@@ -74,10 +71,12 @@ public class Camera {
 //        }
 
         //Camera sticks to the players position
-        camPos.x = player.bounds.x - 250;
+//        camPos.x = player.bounds.x - 250;
 //        camPos.y = player.playerbounds50;
-
-        /* Do I clamp here? */
+//        //Juice it or lose it video
+        camPos.x += ((player.bounds.x - 250) - camPos.x) * .1;
+        //Juicing your camera with maths
+//        camPos.x = (float) (.20 * (player.bounds.x - 250) + (camPos.x * .80));
     }
 
     private void shake(float deltaTime) {

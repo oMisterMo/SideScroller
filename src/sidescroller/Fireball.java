@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package sidescroller;
 
 import common.Vector2D;
@@ -10,9 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
 /**
- * 11-May-2017, 15:04:33.
- *
- * @author Mo
+ * @author Mohammed Ibrahim
  */
 public class Fireball extends DynamicGameObject {
 
@@ -58,9 +51,9 @@ public class Fireball extends DynamicGameObject {
             isDead = true;
         } else {
             //its alive print time
-            System.out.println("fireball alive time: " + currentTime);
-            velocity.addToo(acceleration.x * deltaTime, acceleration.y * deltaTime);
-            position.addToo(velocity.x * deltaTime, velocity.y * deltaTime);
+//            System.out.println("fireball alive time: " + currentTime);
+            velocity.add(acceleration.x * deltaTime, acceleration.y * deltaTime);
+            position.add(velocity.x * deltaTime, velocity.y * deltaTime);
             bounds.setRect(position.x, position.y, bounds.width, bounds.height);
 
             if (position.y > 512) {

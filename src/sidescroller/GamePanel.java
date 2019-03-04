@@ -12,24 +12,22 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 
 /**
- * When you remove you have to set the variable to null -> AVOID MEMORY LEAKS
  *
  * 06-Sep-2016, 23:03:23.
  *
- * @author Mo
+ * @author Mohammed Ibrahim
  */
 public class GamePanel extends JPanel implements Runnable {
 
-    //GAMES WIDTH & HEIGHT
     public static final int GAME_WIDTH = 1280;
     public static final int GAME_HEIGHT = 576;
-
+    //Game States
     public static final int WORLD_STATE_RUNNING = 0;
     public static final int WORLD_STATE_GAMEOVER = 1;
     public int state = WORLD_STATE_RUNNING;
 
+    private boolean running = false;
     private Thread thread;
-    private boolean running;
     private BufferedImage image;
     private Graphics2D g;
 
@@ -37,11 +35,9 @@ public class GamePanel extends JPanel implements Runnable {
 
     private final int FPS = 60;
     private long averageFPS;
-    
-    //Game varialbes
+
     private final World world;
 
-    //CONSTRUCTOR
     public GamePanel() {
         super();
         setPreferredSize(new Dimension(GAME_WIDTH - 10, GAME_HEIGHT - 10));
@@ -54,7 +50,6 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     private void initInput() {
-        //Load listeners
         input = new Input();
         addKeyListener(input);
 //        addKeyListener(new TAdapter());
@@ -62,8 +57,8 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     //METHODS
-    /*
-     Is called after our JPanel has been added to the JFrame component.
+    /**
+     * Is called after the JPanel has been added to the JFrame component.
      */
     @Override
     public void addNotify() {
@@ -76,38 +71,36 @@ public class GamePanel extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        long startTime;
+        long startTime = System.nanoTime();
+        float deltaTime;
         long timeTaken;
         long frameCount = 0;
         long totalTime = 0;
         long waitTime;
         long targetTime = 1000 / FPS;
-        int counter = 0;    //can delete, counts negative waitTime
 
         running = true;
-
         image = new BufferedImage(GAME_WIDTH, GAME_HEIGHT, BufferedImage.TYPE_INT_RGB);
         g = (Graphics2D) image.getGraphics();
 
         //GAME LOOP
         while (running) {
+            deltaTime = (System.nanoTime() - startTime) / 1_000_000_000.0f;
             startTime = System.nanoTime();
-
+            System.out.println("dt: "+deltaTime);
             handleInput();
-            gameUpdate(1f / FPS);
+            gameUpdate(deltaTime);
             Input.updateLastKey();
             gameRender(g);
             gameDraw();
 
             //How long it took to run
-            timeTaken = (System.nanoTime() - startTime) / 1000000;
-            //              16ms - targetTime
+            timeTaken = (System.nanoTime() - startTime) / 1_000_000;
+            //16ms - targetTime
             waitTime = targetTime - timeTaken;
-
-            //System.out.println(timeTaken);
             if (waitTime < 0) {
                 //I get a negative value at the beg
-                System.out.println(counter++ + ": NEGATIVE: " + waitTime);
+                System.out.println("NEGATIVE: " + waitTime);
                 System.out.println("targetTime = " + targetTime);
                 System.out.println("timeTaken = " + timeTaken + "\n");
             }
@@ -124,28 +117,48 @@ public class GamePanel extends JPanel implements Runnable {
 
             //If the current frame == 60  we calculate the average frame count
             if (frameCount >= FPS) {
-                averageFPS = 1000 / ((totalTime / frameCount) / 1000000);
+                averageFPS = 1000 / ((totalTime / frameCount) / 1000_000);
                 frameCount = 0;
                 totalTime = 0;
                 //System.out.println("Average fps: " + averageFPS);
             }
         }
-
     }
 
     private void handleInput() {
-        world.handleInput();
+        switch (state) {
+            case WORLD_STATE_RUNNING:
+                world.handleInput();
+                break;
+            case WORLD_STATE_GAMEOVER:
+
+                break;
+        }
     }
 
     /* ********************* UPDATE & RENDER ************************* */
     private void gameUpdate(float deltaTime) {
-        //********** Do updates HERE **********
-        world.gameUpdate(deltaTime);
+        switch (state) {
+            case WORLD_STATE_RUNNING:
+                world.gameUpdate(deltaTime);
+                break;
+            case WORLD_STATE_GAMEOVER:
+
+                break;
+        }
     }
 
     private void gameRender(Graphics2D g) {
-        world.gameRender(g);
-        drawHelp();
+        switch (state) {
+            case WORLD_STATE_RUNNING:
+                world.gameRender(g);
+                drawHelp();
+                break;
+            case WORLD_STATE_GAMEOVER:
+                g.setColor(Color.WHITE);
+                g.drawString("GAMEOVER", GAME_WIDTH / 2 - 50, GAME_HEIGHT / 2 - 20);
+                break;
+        }
     }
 
     private void drawHelp() {
@@ -206,6 +219,14 @@ public class GamePanel extends JPanel implements Runnable {
             //tween.mousePressed(e);
             //transition.mousePressed(e);
             //dragon.mousePressed(e);
+            if(e.getButton() == MouseEvent.BUTTON3){
+                System.out.println("RIGT CLICKED");
+                int x = e.getX();
+                int y = e.getY();
+                world.player.position.set(x, y);
+                world.player.bounds.x = x;
+                world.player.bounds.y = y;
+            }
         }
 
         @Override

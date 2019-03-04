@@ -11,7 +11,7 @@ import java.util.Random;
 /**
  * 28-Nov-2017, 20:15:24.
  *
- * @author Mo
+ * @author Mohammed Ibrahim
  */
 public class Level extends GameObject {
 
@@ -29,7 +29,7 @@ public class Level extends GameObject {
     public static int renderMode = HITBOX_MODE; //initial render mode
 
     //Array holding all tiles
-    private Tile[][] tiles;
+    private final Tile[][] tiles;
     //level to load
     private BufferedImage level;
 
@@ -52,10 +52,11 @@ public class Level extends GameObject {
         initTiles();    //create empty tiles
         resetBoard();   //sets to empty (not needed here)
 
-        loadLevel();
+        loadLevel(Assets.level0);
 
 //        setBorder();
         printNoSolidBlocks();   //can delete
+        System.out.println("Level loaded...");
     }
 
     /**
@@ -103,10 +104,16 @@ public class Level extends GameObject {
         }
     }
 
-    /**
-     * Loads either a random level or level 0
-     */
     public void loadLevel() {
+        loadLevel(Assets.testLevel);
+    }
+
+    /**
+     * Loads either a random testLevel or testLevel 0
+     *
+     * @param l
+     */
+    public void loadLevel(BufferedImage l) {
 //        clearPositions();
         /*
          ITEM = ( R ,  G ,  B )
@@ -119,8 +126,9 @@ public class Level extends GameObject {
          BoxOnHome = (0, 0, 255)  : BLUE
          */
 
-        //System.out.println("Color Model: " + level.getColorModel());
-        level = Assets.level;
+        //System.out.println("Color Model: " + testLevel.getColorModel());
+//        level = Assets.testLevel;
+        level = l;
         int w = level.getWidth();
         int h = level.getHeight();
 //        System.out.println("w " + w + "\nh " + h);
@@ -128,7 +136,7 @@ public class Level extends GameObject {
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
                 int pixel = level.getRGB(x, y);
-                //Get color of pixel in level array
+                //Get color of pixel in testLevel array
                 int a = ((pixel & 0xff000000) >>> 24);
                 int r = ((pixel & 0x00ff0000) >>> 16);
                 int g = ((pixel & 0x0000ff00) >>> 8);
@@ -192,11 +200,11 @@ public class Level extends GameObject {
     /**
      * Called when setting 1001 spikes spikeBlocks
      *
-     * Loops though level bitmap, depending on the pixel, load a new tile of
+     * Loops though testLevel bitmap, depending on the pixel, load a new tile of
      * 1001 spikes type.
      */
-    private void setNewTiles() {
-        level = Assets.level;
+    private void setNewTiles(BufferedImage l) {
+        level = l;
         int w = level.getWidth();
         int h = level.getHeight();
 
@@ -338,10 +346,13 @@ public class Level extends GameObject {
 //            return;
 //        }
         /*CLAMP ver 2 (clamp between 0 - Tiles.length*/
-        if (x < 0 || y < 0) {
+        if (x < 0) {
             x = 0;
+            System.out.println("x < 0, clamping to 0");
+        }
+        if (y < 0) {
             y = 0;
-            System.out.println("Tiles[-y][-x] Not avaible -> clamping");
+            System.out.println("y < 0, clamping to 0");
         }
         if (x >= NO_OF_TILES_X) {
             System.out.println("x: " + x);
@@ -356,23 +367,8 @@ public class Level extends GameObject {
         return tiles[y][x];
     }
 
-    public Tile getTile(Point tile) {
-        if (tile.x < 0 || tile.y < 0) {
-            tile.x = 0;
-            tile.y = 0;
-            System.out.println("Tiles[-y][-x] Not avaible -> clamping");
-        }
-        if (tile.x >= NO_OF_TILES_X) {
-            System.out.println("x: " + tile.x);
-            System.out.println("NO_OF_TILES_X = " + NO_OF_TILES_X);
-            tile.x = NO_OF_TILES_X - 1;
-            System.out.println("x clamped to " + (NO_OF_TILES_X - 1));
-        }
-        if (tile.y >= NO_OF_TILES_Y) {
-            tile.y = NO_OF_TILES_Y - 1;
-            System.out.println("y clamped to " + (NO_OF_TILES_Y - 1));
-        }
-        return tiles[tile.y][tile.x];
+    public Tile getTile(Point point) {
+        return getTile(point.x, point.y);
     }
 
     public void handleInput() {
@@ -383,12 +379,12 @@ public class Level extends GameObject {
         //Mario
         if (Input.isKeyTyped(KeyEvent.VK_C)) {
             renderMode = BITMAP_MODE;
-            loadLevel();
+            loadLevel(Assets.level0);
         }
         //1001 Spikes
         if (Input.isKeyTyped(KeyEvent.VK_V)) {
             renderMode = BITMAP_MODE;
-            setNewTiles();
+            setNewTiles(Assets.level0);
         }
     }
 
