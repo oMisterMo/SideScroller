@@ -1,3 +1,19 @@
+/* 
+ * Copyright (C) 2019 Mohammed Ibrahim
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package sidescroller;
 
 import java.awt.Color;
@@ -13,8 +29,7 @@ import java.awt.image.BufferedImage;
 
 /**
  *
- * 06-Sep-2016, 23:03:23.
- *
+ * @version 0.1.0
  * @author Mohammed Ibrahim
  */
 public class GamePanel extends JPanel implements Runnable {
@@ -40,7 +55,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public GamePanel() {
         super();
-        setPreferredSize(new Dimension(GAME_WIDTH - 10, GAME_HEIGHT - 10));
+        setPreferredSize(new Dimension(GAME_WIDTH, GAME_HEIGHT));
         setFocusable(true);
         //System.out.println(requestFocusInWindow());
         requestFocus(); //-> platform dependant
@@ -87,7 +102,7 @@ public class GamePanel extends JPanel implements Runnable {
         while (running) {
             deltaTime = (System.nanoTime() - startTime) / 1_000_000_000.0f;
             startTime = System.nanoTime();
-            System.out.println("dt: "+deltaTime);
+            System.out.println("dt: " + deltaTime);
             handleInput();
             gameUpdate(deltaTime);
             Input.updateLastKey();
@@ -219,7 +234,7 @@ public class GamePanel extends JPanel implements Runnable {
             //tween.mousePressed(e);
             //transition.mousePressed(e);
             //dragon.mousePressed(e);
-            if(e.getButton() == MouseEvent.BUTTON3){
+            if (e.getButton() == MouseEvent.BUTTON3) {
                 System.out.println("RIGT CLICKED");
                 int x = e.getX();
                 int y = e.getY();

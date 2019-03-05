@@ -19,9 +19,8 @@ package sidescroller;
 import common.Vector2D;
 
 /**
- * A DynamicGameObject 
- *
- * An abstract class may have static fields and static methods.
+ * A dynamic game object has the ability to move across the viewport by updating
+ * its position using the velocity and acceleration provided.
  *
  * @version 0.1.0
  * @author Mohammed Ibrahim
