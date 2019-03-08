@@ -38,7 +38,7 @@ public class Mole extends DynamicGameObject {
     public static final int WALK_SPEED = 100;
 
     /**
-     * Constructs a new Mole at {@link x}, {@link y}
+     * Constructs a new Mole at x, y
      *
      * @param x the x position
      * @param y the y position

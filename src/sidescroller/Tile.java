@@ -48,7 +48,7 @@ public class Tile extends StaticGameObject {
     public boolean solid = false;
 
     /**
-     * Constructs a new Tile at (x,y) which is not solid.
+     * Constructs a new solid Tile at x, y.
      *
      * @param x the x position
      * @param y the y position

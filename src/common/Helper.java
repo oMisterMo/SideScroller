@@ -104,7 +104,7 @@ public final class Helper {
      * Returns a random decimal number that is within the given range.
      *
      *
-     * .floor() Returns the largest (closest to positive infinity) double value
+     * floor() Returns the largest (closest to positive infinity) double value
      * that is less than or equal to the argument and is equal to a mathematical
      * integer. Special cases:
      *
@@ -117,7 +117,7 @@ public final class Helper {
      *
      * @param min minimum value (inclusive)
      * @param max maximum value (exclusive)
-     * @return
+     * @return random value between min and max
      */
     public static float Random(float min, float max) {
         return (r.nextFloat() * (max - min)) + min;

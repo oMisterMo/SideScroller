@@ -44,7 +44,7 @@ public class Thwomp extends DynamicGameObject {
     private final float originalHeight;
 
     /**
-     * Constructs a new Thwomp at {@link x}, {@link y}
+     * Constructs a new Thwomp at x, y
      *
      * @param x the x position
      * @param y the y position

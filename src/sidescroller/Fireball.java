@@ -39,7 +39,7 @@ public class Fireball extends DynamicGameObject {
 //    private Animation fireball;
 
     /**
-     * Constructs a new Fireball at {@link x}, {@link y} with a set speed.
+     * Constructs a new Fireball at x, y with a set speed.
      *
      * @param x the horizontal position
      * @param y the vertical position

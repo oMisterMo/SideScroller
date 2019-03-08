@@ -85,7 +85,7 @@ public class Player extends DynamicGameObject {
     private int numOfCollision = 0;
 
     /**
-     * Constructs a new Player at {@link x}, {@link y}
+     * Constructs a new Player at x, y
      *
      * @param x the x position
      * @param y the y position

@@ -285,7 +285,7 @@ public class Vector2D {
      * @param finalVel in meters per second
      * @param initialVel in meters per second
      * @param mass in kilograms
-     * @return
+     * @return final momentum - initial momentum
      */
     public Vector2D impulse(Vector2D finalVel, Vector2D initialVel, float mass) {
         /*

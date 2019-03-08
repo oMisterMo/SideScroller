@@ -131,8 +131,8 @@ public class Level extends GameObject {
     }
 
     /**
-     * Loads the level data from the argument {@link level} into the
-     * {@link tiles} array.
+     * Loads the level data from the argument {@link #level level} into the
+     * {@link #tiles tiles} array.
      *
      * @param level image containing level details
      */
@@ -200,7 +200,8 @@ public class Level extends GameObject {
     }
 
     /**
-     * Loops though the {@link level} bitmap and loads the 1001 spikes tile set.
+     * Loops though the {@link #level level} bitmap and loads the 1001 spikes
+     * tile set.
      *
      * This method is unnecessary as we should be able to switch assets without
      * having to loop through the level data again.
@@ -312,13 +313,12 @@ public class Level extends GameObject {
     }
 
     /**
-     * Gets a tile at index {@link x}, {@link y} from {@link tiles}. If a range
-     * greater than or less than the size of the array is given the value is
-     * capped.
+     * Gets a tile at index x, y from {@link #tiles tiles}. If a range greater
+     * than or less than the size of the array is given the value is capped.
      *
      * @param x the x index
      * @param y the y index
-     * @return tile at {@link x}, {@link y}
+     * @return tile at x, y
      */
     public Tile getTile(int x, int y) {
         /*CLAMP ver 1*/
@@ -353,9 +353,9 @@ public class Level extends GameObject {
     }
 
     /**
-     * Gets a tile from the {@link tiles} list.
+     * Gets a tile from the {@link #tiles tiles} list.
      *
-     * @param point index into {@link tiles}
+     * @param point index into {@link #tiles tiles}
      * @return tile at point.x, point.y
      */
     public Tile getTile(Point point) {

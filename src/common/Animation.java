@@ -62,7 +62,8 @@ public class Animation {
     }
 
     /**
-     * Gets an image from the {@link frames} list based on the current frame.
+     * Gets an image from the {@link #frames frames} list based on the current
+     * frame.
      *
      * @return a sprite from the animation
      */

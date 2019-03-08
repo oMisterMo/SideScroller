@@ -41,8 +41,8 @@ public class SpatialHashGrid {
      * Constructs a new SpatialHasGrid with enough cells to fill the entire
      * screen based on the arguments provided.
      *
-     * A good place to start is having {@link cellSize} five times bigger than
-     * the biggest object in the scene.
+     * A good place to start is having {@link #cellSize cellSize} five times
+     * bigger than the biggest object in the scene.
      *
      * @param worldWidth the width of the world
      * @param worldHeight the height of the world
@@ -75,9 +75,10 @@ public class SpatialHashGrid {
     }
 
     /**
-     * Inserts a game object into the {@link staticCells} list. There are
-     * {@link cellsPerRow} * {@link cellsPerCol} total cells. Each cell contains
-     * a static and dynamic list.
+     * Inserts a game object into the {@link #staticCells staticCells} list.
+     * There are
+     * {@link #cellsPerRow cellsPerRow} * {@link #cellsPerCol cellsPerCol} total
+     * cells. Each cell contains a static and dynamic list.
      *
      * @param obj game object to insert
      */
@@ -91,7 +92,7 @@ public class SpatialHashGrid {
     }
 
     /**
-     * Inserts a game object into the {@link dynamicCells} list.
+     * Inserts a game object into the {@link #dynamicCells dynamicCells} list.
      *
      * @param obj dynamic game object to insert
      */
@@ -135,7 +136,7 @@ public class SpatialHashGrid {
      * same cell.
      *
      * @param obj the object whose cell to search
-     * @return a list of neighbouring objects in same cell as {@link obj}
+     * @return a list of neighbouring objects in same cell as obj
      */
     public List<StaticGameObject> getPotentialColliders(StaticGameObject obj) {
         foundObjects.clear();
@@ -167,11 +168,12 @@ public class SpatialHashGrid {
 
     /**
      * Gets the cell id's that a given game object is contained in. Cells are id
-     * from 0 to ({@link cellsPerRow} * {@link cellsPerCol}). The first cell
-     * starts at (0,0) to (cellW, cellH).
+     * from 0 to
+     * ({@link #cellsPerRow cellsPerRow} * {@link #cellsPerCol cellsPerCol}).
+     * The first cell starts at (0,0) to (cellW, cellH).
      *
      * @param obj the object to examine
-     * @return a list of cell id's that {@link obj} overlaps
+     * @return a list of cell id's that obj overlaps
      */
     public int[] getCellIds(StaticGameObject obj) {
         int x1 = (int) Math.floor(obj.bounds.x / cellSize);

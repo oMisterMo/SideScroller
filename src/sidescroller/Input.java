@@ -61,7 +61,7 @@ public class Input implements KeyListener {
      * Just pressed once.
      *
      * @param keyCode the ASCII key code
-     * @return true if {@link keyCode} is pressed
+     * @return true if keyCode is pressed
      */
     public static boolean isKeyTyped(int keyCode) {
         return currentKey[keyCode] && !lastKey[keyCode];
@@ -71,14 +71,14 @@ public class Input implements KeyListener {
      * Key released.
      *
      * @param keyCode the ASCII key code
-     * @return true if {@link keyCode} is released
+     * @return true if keyCode is released
      */
     public static boolean isKeyReleased(int keyCode) {
         return !currentKey[keyCode] && lastKey[keyCode];
     }
 
     /**
-     * Updated the state of the {@link lastKey} buffer.
+     * Updates the state of the {@link #lastKey lastKey} buffer.
      */
     public static void updateLastKey() {
         lastKey = currentKey.clone();
