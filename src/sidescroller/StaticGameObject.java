@@ -34,7 +34,8 @@ public class StaticGameObject extends GameObject {
     /**
      * Constructs a new object at the given location
      *
-     * The x,y location represent the top right corner of the object
+     * The {@link x}, {@link y} location represent the top left hand corner of
+     * the object
      *
      * @param x the x position
      * @param y the y position

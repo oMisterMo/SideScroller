@@ -22,7 +22,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -32,15 +31,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a player within our game world
+ * Represents a player within the game world.
  *
  * @version 0.1.0
  * @author Mohammed Ibrahim
  */
 public class Player extends DynamicGameObject {
 
-    public static final float PLAYER_WIDTH = 28;    //32
-    public static final float PLAYER_HEIGHT = 28;   //32
+    public static final float PLAYER_WIDTH = 28;    //32 originally
+    public static final float PLAYER_HEIGHT = 28;   //32 originally
     //Player states
     public static final int STATE_IDLE = 0;
     public static final int STATE_WALK = 1;
@@ -79,14 +78,20 @@ public class Player extends DynamicGameObject {
     private List<Fireball> fireball;    //Shitty fireballs
 
     //For debugging****************************
-    private Font f;
+    private Font font;
     private Vector2D fontPos;
     private Stroke stroke;
     private String state_debug = "FALLING";
     private int numOfCollision = 0;
 
-    public Player(float x, float y, float width, float height) {
-        super(x, y, width, height);
+    /**
+     * Constructs a new Player at {@link x}, {@link y}
+     *
+     * @param x the x position
+     * @param y the y position
+     */
+    public Player(float x, float y) {
+        super(x, y, PLAYER_WIDTH, PLAYER_HEIGHT);
         initAnimations();
 
 //        initInnerHitbox();
@@ -145,61 +150,6 @@ public class Player extends DynamicGameObject {
         jump.setDelay(200);
     }
 
-    /*
-     private void initInnerHitbox() {
-     //RED
-     topHitbox = new Rectangle.Float();
-     //WHITE
-     bottomHitbox = new Rectangle.Float();
-     //YELLOW
-     leftHitbox = new Rectangle.Float();
-     //DARK GRAY
-     rightHitbox = new Rectangle.Float();
-     updateInnerHitbox();
-
-     //Check if any of the inner rectangles intercept
-     System.out.println("top + bottom intercept? -> "
-     + topHitbox.intersects(bottomHitbox));
-     System.out.println("top + right intercept? -> "
-     + topHitbox.intersects(rightHitbox));
-     System.out.println("right + bottom intercept? -> "
-     + rightHitbox.intersects(bottomHitbox));
-     System.out.println("top + left intercept? -> "
-     + topHitbox.intersects(leftHitbox));
-     System.out.println("left + bottom intercept? -> "
-     + rightHitbox.intersects(leftHitbox));
-     }
-
-     public void updateInnerHitbox() {
-     //create inner hitbox to determin left, right top bottom collision
-     float w = bounds.width / 4;
-     float h = bounds.height / 2;
-
-     //        //RED
-     topHitbox.x = (bounds.x + bounds.width / 2) - (w);
-     topHitbox.y = bounds.y;
-     topHitbox.width = w * 2;
-     topHitbox.height = h / 2;
-     //WHITE
-     bottomHitbox.x = (bounds.x + bounds.width / 2) - (w * 3) / 2;
-     bottomHitbox.y = bounds.y + bounds.height - h / 2;
-     bottomHitbox.width = w * 3;
-     bottomHitbox.height = h / 2;
-     //YELLOW
-     //        System.out.println("old: " + ((bounds.x + bounds.width / 2) - w - w));
-     //        System.out.println("new: " + bounds.x);
-     leftHitbox.x = bounds.x;
-     leftHitbox.y = bounds.y + h / 2;
-     leftHitbox.width = w;
-     leftHitbox.height = h;
-     //GREEN
-     //        System.out.println("old: "+((bounds.x + bounds.width / 2) - w + w * 2));
-     //        System.out.println("nes: "+((bounds.x + bounds.width) - leftHitbox.width));
-     rightHitbox.x = (bounds.x + bounds.width) - leftHitbox.width;
-     rightHitbox.y = bounds.y + h / 2;
-     rightHitbox.width = w;
-     rightHitbox.height = h;
-     }*/
     private void updateFireballs(float deltaTime) {
         int size = fireball.size();
         Fireball ball;
@@ -216,55 +166,23 @@ public class Player extends DynamicGameObject {
     private void initFont() {
 //        f = new Font("Comic Sans MS", Font.PLAIN, 25);
 //        f = new Font("Times new roman", Font.PLAIN, 25);
-        f = new Font("Courier new", Font.PLAIN, 25);
+        font = new Font("Courier new", Font.PLAIN, 25);
         fontPos = new Vector2D(5, 60);
         stroke = new BasicStroke(1);
     }
 
-    public void setGrounded(boolean val) {
-//        this.grounded = val;
-    }
-
+    /**
+     * Applies an impulse to the players y velocity.
+     */
     public void jump() {
         playerState = STATE_JUMP;
         velocity.y = -JUMP_HEIGHT + 100;  //impulse up
         jump.resetAnimation();
     }
 
-    /*
-     public void doInnerColCheck(Rectangle.Float wall) {
-     //        System.out.println("inner");
-     //top
-     if (topHitbox.intersects(wall)) {
-     //            System.out.println("top");
-     velocity.y = 0;
-     bounds.y = wall.y + wall.height;
-     }
-     //left
-     if (leftHitbox.intersects(wall)) {
-     //            System.out.println("left");
-     velocity.x = 0;
-     bounds.x = wall.x + wall.width + 1;   //could remove the 2's
-     }
-     //right
-     if (rightHitbox.intersects(wall)) {
-     //            System.out.println("right");
-     velocity.x = 0;
-     bounds.x = wall.x - bounds.width - 1; //removes the 2's
-     }
-
-     if (bottomHitbox.intersects(wall)) {
-     if (velocity.y > 0) {
-     //            System.out.println("bot");
-     grounded = true;
-     velocity.y = 0;
-     bounds.y = wall.y - bounds.height;
-     //            Camera.cameraState = Camera.STATE_SHAKE;
-     } else {
-     System.out.println("NOO, IM MOVING UP, do not snap me pls");
-     }
-     }
-     }*/
+    /**
+     * Player walk, run, jump and fireball.
+     */
     public void handleInput() {
         //Walk input
         if (Input.isKeyPressed(KeyEvent.VK_A)) {
@@ -345,11 +263,14 @@ public class Player extends DynamicGameObject {
         if (Input.isKeyTyped(KeyEvent.VK_B)) {
             if (fireball.size() < 5) {
                 //Do I need a add a new instance? object pool?
-                fireball.add(new Fireball(bounds.x, bounds.y, 32, 32, facingRight));
+                fireball.add(new Fireball(bounds.x, bounds.y, facingRight));
             }
         }
     }
 
+    /**
+     * Player walk, run, jump and fireball.
+     */
     public void handleInput2() {
 //        System.out.println("grounded: " + grounded);
 
@@ -420,17 +341,12 @@ public class Player extends DynamicGameObject {
         if (Input.isKeyTyped(KeyEvent.VK_B)) {
             if (fireball.size() < 5) {
                 //Do I need a add a new instance? object pool?
-                fireball.add(new Fireball(bounds.x, bounds.y, 32, 32, facingRight));
+                fireball.add(new Fireball(bounds.x, bounds.y, facingRight));
             }
         }
     }
 
-    /**
-     * ************UPDATE & RENDER
-     *
-     **************
-     * @param deltaTime
-     */
+    /* *************** UPDATE & RENDER ******************* */
     @Override
     public void gameUpdate(float deltaTime) {
 //        System.out.println(playerState);
@@ -449,12 +365,6 @@ public class Player extends DynamicGameObject {
                 System.out.println("FALL!");
             }
         }
-//        if (!grounded /*&& velocity.y < 0*/) {
-//            if (playerState != STATE_JUMP) {
-//                playerState = STATE_JUMP;
-////                System.out.println("jump");
-//            }
-//        }
 
         switch (playerState) {
             case STATE_IDLE:
@@ -493,7 +403,6 @@ public class Player extends DynamicGameObject {
     @Override
     void gameRender(Graphics2D g) {
 //        g.setStroke(stroke);
-
         switch (Level.renderMode) {
             case Level.HITBOX_MODE:
                 drawHitbox(g);
@@ -513,16 +422,6 @@ public class Player extends DynamicGameObject {
         //Draw bounds
         g.setColor(Color.BLUE);
         g.draw(bounds);
-
-//        //Draw inner hit boxes
-//        g.setColor(Color.ORANGE);
-//        g.fill(leftHitbox);
-//        g.setColor(Color.GREEN);
-//        g.fill(rightHitbox);
-//        g.setColor(Color.RED);
-//        g.fill(topHitbox);
-//        g.setColor(Color.WHITE);
-//        g.fill(bottomHitbox);
     }
 
     private void drawRender(Graphics2D g) {
@@ -534,7 +433,7 @@ public class Player extends DynamicGameObject {
                     g.drawImage(idle2.getImage(), (int) bounds.x, (int) bounds.y,
                             (int) bounds.width, (int) bounds.height, null);
                 } else {
-                    //Otherwise draw normal idle animation
+                    //Otherwise draw normal idle animation (needs optimisation) 
 
                     if (facingRight) {
                         g.drawImage(idle.getImage(), (int) (bounds.x + bounds.width), (int) bounds.y,
@@ -585,9 +484,14 @@ public class Player extends DynamicGameObject {
 //        g.drawImage(playerImg, (int) bounds.x, (int) bounds.y, null);
     }
 
+    /**
+     * Debugging, draws information regarding the player.
+     *
+     * @param g graphics context that provides drawing capabilities
+     */
     public void drawInfo(Graphics2D g) {
         g.setColor(Color.WHITE);
-        g.setFont(f);
+        g.setFont(font);
 //        g.drawString("Draw REAL POS", fontPos.x, fontPos.y);
 //        g.drawString("Pos: " + String.valueOf(position), fontPos.x, fontPos.y);
         g.drawString("Pos: " + "x: " + (int) bounds.x + ", y: " + (int) bounds.y, fontPos.x, fontPos.y);

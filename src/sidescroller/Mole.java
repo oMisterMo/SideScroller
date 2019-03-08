@@ -20,6 +20,9 @@ import common.Helper;
 import java.awt.Graphics2D;
 
 /**
+ * The Mole class defines a mole that simply patrols left and right within the
+ * screen.
+ *
  * @version 0.1.0
  * @author Mohammed Ibrahim
  */
@@ -31,18 +34,24 @@ public class Mole extends DynamicGameObject {
     public static final int STATE_WALK = 0;
     public static final int STATE_FALL = 1;
     public int moleState = STATE_FALL;
-    
+
     public static final int WALK_SPEED = 100;
 
-    public Mole(float x, float y, float width, float height) {
-        super(x, y, width, height);
-        bounds.setRect(x, y + 4, width - 5, height - 5);
+    /**
+     * Constructs a new Mole at {@link x}, {@link y}
+     *
+     * @param x the x position
+     * @param y the y position
+     */
+    public Mole(float x, float y) {
+        super(x, y, Mole.MOLE_WIDTH, Mole.MOLE_HEIGHT);
+        bounds.setRect(x, y + 4, MOLE_WIDTH - 5, MOLE_HEIGHT - 5);
         //Width and height doesn't change -> remember to add bounds to y on update
         velocity.x = WALK_SPEED;
     }
-    
-    public void xCol(DynamicGameObject obj){
-        
+
+    public void xCol(DynamicGameObject obj) {
+
     }
 
     @Override
@@ -63,9 +72,11 @@ public class Mole extends DynamicGameObject {
 
         //Keep within bounds of world (screen currently)
         if (position.x + MOLE_WIDTH >= GamePanel.GAME_WIDTH) {
+            position.x = GamePanel.GAME_WIDTH - MOLE_WIDTH;
             velocity.x *= -1;
         }
         if (position.x <= 0) {
+            position.x = 0;
             velocity.x *= -1;
         }
     }

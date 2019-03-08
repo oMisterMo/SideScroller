@@ -22,6 +22,9 @@ import java.awt.image.BufferedImage;
 import java.util.Random;
 
 /**
+ * The Cloud class draws a simple image to the screen which wraps when it
+ * reaches the left bounds of the viewport.
+ *
  * @version 0.1.0
  * @author Mohammed Ibrahim
  */
@@ -29,18 +32,20 @@ public class Clouds extends GameObject {
 
     private final static int MIN_HEIGHT = 300;
     private final int CLOUD_SPEED = 180;
-    //First cloud
+    //First cloud image
     private final BufferedImage cloud;
     private int width, height;
 
     private Random r;
     //First cloud
-    private Vector2D cloud_a_pos;
+    private Vector2D cloudA;
     //Second cloud
-    Vector2D cloud_b_pos;
+    private Vector2D cloudB;
+    private int velA, velB;
 
-    int dx, dx2;
-
+    /**
+     * Constructs a new cloud with a random velocity
+     */
     public Clouds() {
         this.cloud = Assets.cloud;
         r = new Random();
@@ -49,35 +54,35 @@ public class Clouds extends GameObject {
         width = cloud.getWidth();
         height = cloud.getHeight();
 
-        cloud_a_pos = new Vector2D(GamePanel.GAME_WIDTH, r.nextInt(GamePanel.GAME_HEIGHT - height - MIN_HEIGHT));
-        cloud_b_pos = new Vector2D(r.nextInt(GamePanel.GAME_WIDTH), r.nextInt(GamePanel.GAME_HEIGHT - height - MIN_HEIGHT));
-        dx = r.nextInt(CLOUD_SPEED - 100) + 1;
-        dx2 = r.nextInt(CLOUD_SPEED) + 2;
+        cloudA = new Vector2D(GamePanel.GAME_WIDTH, r.nextInt(GamePanel.GAME_HEIGHT - height - MIN_HEIGHT));
+        cloudB = new Vector2D(r.nextInt(GamePanel.GAME_WIDTH), r.nextInt(GamePanel.GAME_HEIGHT - height - MIN_HEIGHT));
+        velA = r.nextInt(CLOUD_SPEED - 100) + 1;
+        velB = r.nextInt(CLOUD_SPEED) + 2;
     }
 
     @Override
     void gameUpdate(float deltaTime) {
         //If first cloud is off the screen, reset x position to the right
-        if (cloud_a_pos.x < -width) {
+        if (cloudA.x < -width) {
             //new position twice the length of the game worlk
-            cloud_a_pos.x = GamePanel.GAME_WIDTH*2 + r.nextInt(200);
-            cloud_a_pos.y = r.nextInt(GamePanel.GAME_HEIGHT - height - MIN_HEIGHT);
-            dx = r.nextInt(CLOUD_SPEED - 100) + 1;
+            cloudA.x = GamePanel.GAME_WIDTH * 2 + r.nextInt(200);
+            cloudA.y = r.nextInt(GamePanel.GAME_HEIGHT - height - MIN_HEIGHT);
+            velA = r.nextInt(CLOUD_SPEED - 100) + 1;
         }
-        if (cloud_b_pos.x < -width) {
-            cloud_b_pos.x = GamePanel.GAME_WIDTH*2;
-            cloud_b_pos.y = r.nextInt(GamePanel.GAME_HEIGHT - height - MIN_HEIGHT);
-            dx2 = r.nextInt(CLOUD_SPEED) + 1;
+        if (cloudB.x < -width) {
+            cloudB.x = GamePanel.GAME_WIDTH * 2;
+            cloudB.y = r.nextInt(GamePanel.GAME_HEIGHT - height - MIN_HEIGHT);
+            velB = r.nextInt(CLOUD_SPEED) + 1;
         }
         //Move left
-        cloud_a_pos.x -= (dx * deltaTime);
-        cloud_b_pos.x -= (dx2 * deltaTime);
+        cloudA.x -= (velA * deltaTime);
+        cloudB.x -= (velB * deltaTime);
     }
 
     @Override
     void gameRender(Graphics2D g) {
-        g.drawImage(cloud, (int) cloud_a_pos.x, (int) cloud_a_pos.y, null);
-        g.drawImage(cloud, (int) cloud_b_pos.x, (int) cloud_b_pos.y, null);
+        g.drawImage(cloud, (int) cloudA.x, (int) cloudA.y, null);
+        g.drawImage(cloud, (int) cloudB.x, (int) cloudB.y, null);
     }
 
 }

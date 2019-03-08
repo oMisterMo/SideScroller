@@ -19,8 +19,8 @@ package sidescroller;
 import common.Vector2D;
 
 /**
- * A dynamic game object has the ability to move across the viewport by updating
- * its position using the velocity and acceleration provided.
+ * A DynamicGameObject moves across the screen by applying a force to its
+ * position.
  *
  * @version 0.1.0
  * @author Mohammed Ibrahim
@@ -31,6 +31,14 @@ public class DynamicGameObject extends StaticGameObject {
     protected Vector2D velocity;
     protected boolean grounded = false;
 
+    /**
+     * Constructs a new dynamic object at the x,y location given.
+     *
+     * @param x the x position
+     * @param y the y position
+     * @param width the width of the object
+     * @param height the height of the object
+     */
     public DynamicGameObject(float x, float y, float width, float height) {
         super(x, y, width, height);
         acceleration = new Vector2D();

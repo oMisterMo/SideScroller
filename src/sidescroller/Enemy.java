@@ -17,11 +17,15 @@
 package sidescroller;
 
 /**
+ * The Enemy interface provides a move and handle collision method which
+ * provides all functionality of a simple enemy.
+ *
  * @version 0.1.0
  * @author Mohammed Ibrahim
  */
 public interface Enemy {
-    
+
     void move();
+
     void handleCollision();
 }

@@ -19,22 +19,24 @@ package sidescroller;
 import common.Animation;
 import common.SpriteSheet;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
 /**
+ * Holds all assets used in SideScroller.
+ *
  * @version 0.1.0
  * @author Mohammed Ibrahim
  */
 public class Assets {
 
-    //Mario liker payer sheet
-    public static BufferedImage testLevel;  //level
-    public static BufferedImage level0;  //level
+    //Game levels (rgb tile id)
+    public static BufferedImage levelTest;  //level
+    public static BufferedImage level;      //level
 
+    //Mario like player sheet
     public static BufferedImage playerSheet;    //main character spritesheet
-    public static BufferedImage playerMo;         //player (mo - not used)
+    public static BufferedImage playerMo;       //player (mo - not used)
 
     //Mario world sprites
     public static BufferedImage marioTL;    //top left
@@ -61,27 +63,26 @@ public class Assets {
     public static SpriteSheet spikeLavaSheet;
     public static Animation spikeLava;
 
+    //Items
     public static BufferedImage spikeFireball;
 
     //Background
     public static BufferedImage cloud;
 
-    //Enemiers
-//    public static Animation thwomp;
+    //Enemies
     public static SpriteSheet enemies;
     public static BufferedImage[] thwomp;
     public static Animation mole;
 
     public Assets() {
-        //Loading all tiles (NOT CALLED)
-//        System.out.println("Loading tiles...");
+        System.out.println("Loading Assets...");
         loadImages();
     }
 
     public void loadImages() {
-        try {
-            testLevel = ImageIO.read(getClass().getResource("/assets/testFile.png"));
-            level0 = ImageIO.read(getClass().getResource("/assets/level0.png"));
+        try {//using image atlas...maybe?
+            levelTest = ImageIO.read(getClass().getResource("/assets/testFile.png"));
+            level = ImageIO.read(getClass().getResource("/assets/level.png"));
             playerSheet = ImageIO.read(getClass().getResource("/assets/playerSheet.png"));
             playerMo = ImageIO.read(getClass().getResource("/assets/player.png"));
 
@@ -129,12 +130,13 @@ public class Assets {
             numOfFrames = 3;
             thwomp = new BufferedImage[numOfFrames];
             for (int i = 0; i < numOfFrames; i++) {
-                thwomp[i] = ImageIO.read(getClass().getResource("/assets/thwomp" + (i + 1) + ".png"));
+                thwomp[i] = ImageIO.read(getClass().getResource("/assets/thwomp"
+                        + (i + 1) + ".png"));
             }
             numOfFrames = 2;
             testImage = new BufferedImage[numOfFrames];
             for (int i = 0; i < numOfFrames; i++) {
-                testImage[i] = enemies.getPosition(((i) * 36) , 0, 36, 32);
+                testImage[i] = enemies.getPosition(((i) * 36), 0, 36, 32);
             }
             mole = new Animation();
             mole.setFrames(testImage);

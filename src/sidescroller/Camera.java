@@ -17,10 +17,17 @@
 package sidescroller;
 
 import common.Helper;
-import common.Tween;
 import common.Vector2D;
 
 /**
+ * A simple Camera which uses a Player object to determine its position.
+ *
+ * The camera will follow the player as it travels around the screen.
+ *
+ * The camera is clamped to the width of the game world.
+ * 
+ * Note: ScreenShake is not fully implemented yet.
+ *
  * @version 0.1.0
  * @author Mohammed Ibrahim
  */
@@ -38,17 +45,29 @@ public class Camera {
     private float xOffset = 0;
     private float yOffset = 0;
 
-    //for tween
+    //Used for tweening
     long elapsedTime = 0;
 
     public Vector2D camPos;
     private final Player player;
 
-    public Camera(Player player, Vector2D pos) {
+    /**
+     * Constructs a new default camera.
+     *
+     * The position of the player determines the scroll of the camera.
+     *
+     * @param player reference to player
+     */
+    public Camera(Player player) {
         this.player = player;
-        camPos = pos;
+        camPos = new Vector2D();
     }
 
+    /**
+     * Updates the cameras position relative to the players bounds.
+     *
+     * @param deltaTime time since last frame
+     */
     public void gameUpdate(float deltaTime) {
         //Update position
         switch (cameraState) {
@@ -60,7 +79,8 @@ public class Camera {
                 break;
         }
         //Clamp camera to world
-        camPos.x = (float) Math.floor(Helper.Clamp(camPos.x, 0, 1280)); //Math.floor -> to avoid shake (walking into wall)
+        camPos.x = (float) Math.floor(Helper.Clamp(camPos.x, 0, 1280));
+        //Math.floor -> to avoid shake (walking into wall)
 //        camPos.y = Helper.Clamp(camPos.y, -200, 0);
     }
 

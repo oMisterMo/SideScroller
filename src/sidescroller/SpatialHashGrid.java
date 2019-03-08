@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * The SpatialHashGrid class provides and implementation to the broad phase
+ * collision detection.
+ *
  * @version 0.1.0
  * @author Mohammed Ibrahim
  */
@@ -27,13 +30,24 @@ public class SpatialHashGrid {
 
     private List<StaticGameObject>[] dynamicCells;
     private List<StaticGameObject>[] staticCells;
-    private int cellsPerRow;    //ceil(WORLD.WIDTH / cellSize)
+    private int cellsPerRow;
     private int cellsPerCol;
-    private float cellSize;     //300
+    private float cellSize;
     private int[] cellIds = new int[4]; //Cell an object is currently contained in
     private List<StaticGameObject> foundObjects;
 //    List<DynamicGameObject> dynamicCells;
 
+    /**
+     * Constructs a new SpatialHasGrid with enough cells to fill the entire
+     * screen based on the arguments provided.
+     *
+     * A good place to start is having {@link cellSize} five times bigger than
+     * the biggest object in the scene.
+     *
+     * @param worldWidth the width of the world
+     * @param worldHeight the height of the world
+     * @param cellSize the size of each cell
+     */
     @SuppressWarnings("unchecked")
     public SpatialHashGrid(float worldWidth, float worldHeight, float cellSize) {
         this.cellSize = cellSize;
@@ -60,6 +74,13 @@ public class SpatialHashGrid {
 
     }
 
+    /**
+     * Inserts a game object into the {@link staticCells} list. There are
+     * {@link cellsPerRow} * {@link cellsPerCol} total cells. Each cell contains
+     * a static and dynamic list.
+     *
+     * @param obj game object to insert
+     */
     public void insertStaticObject(StaticGameObject obj) {
         int[] cellIds = getCellIds(obj);
         int i = 0;
@@ -69,6 +90,11 @@ public class SpatialHashGrid {
         }
     }
 
+    /**
+     * Inserts a game object into the {@link dynamicCells} list.
+     *
+     * @param obj dynamic game object to insert
+     */
     public void insertDynamicObject(StaticGameObject obj) {
         int[] cellIds = getCellIds(obj);
         int i = 0;
@@ -78,6 +104,11 @@ public class SpatialHashGrid {
         }
     }
 
+    /**
+     * Removes a game object from from either the static or dynamic list.
+     *
+     * @param obj game object to remove
+     */
     public void removeObject(StaticGameObject obj) {
         int[] cellIds = getCellIds(obj);
         int i = 0;
@@ -88,7 +119,11 @@ public class SpatialHashGrid {
         }
     }
 
-    public void clearDynamicCells(StaticGameObject obj) {
+    /**
+     * Clear all dynamic cell lists, must be called each frame before we
+     * reinsert the dynamic objects.
+     */
+    public void clearDynamicCells() {
         int len = dynamicCells.length;
         for (int i = 0; i < len; i++) {
             dynamicCells[i].clear();
@@ -97,19 +132,16 @@ public class SpatialHashGrid {
 
     /**
      * Given a game object, will return a list of game objects contained in the
-     * same cell
+     * same cell.
      *
-     * @param obj game object we want to find surrounding objects
-     * @return a list of neighbouring objects in same cell as 'obj'
+     * @param obj the object whose cell to search
+     * @return a list of neighbouring objects in same cell as {@link obj}
      */
     public List<StaticGameObject> getPotentialColliders(StaticGameObject obj) {
         foundObjects.clear();
         int[] cellIds = getCellIds(obj);
         int i = 0;
         int cellId = -1;
-//        for(int n = 0; n<cellIds.length; n++){
-//            System.out.println(cellIds[n]);
-//        }
 
         while (i <= 3 && (cellId = cellIds[i++]) != -1) {
             //go through dynamic list
@@ -121,7 +153,7 @@ public class SpatialHashGrid {
                 }
             }
 
-            //no of objects at cellid
+            //num of objects at cellid
             len = staticCells[cellId].size();
             for (int j = 0; j < len; j++) {
                 StaticGameObject collider = staticCells[cellId].get(j);
@@ -133,6 +165,14 @@ public class SpatialHashGrid {
         return foundObjects;
     }
 
+    /**
+     * Gets the cell id's that a given game object is contained in. Cells are id
+     * from 0 to ({@link cellsPerRow} * {@link cellsPerCol}). The first cell
+     * starts at (0,0) to (cellW, cellH).
+     *
+     * @param obj the object to examine
+     * @return a list of cell id's that {@link obj} overlaps
+     */
     public int[] getCellIds(StaticGameObject obj) {
         int x1 = (int) Math.floor(obj.bounds.x / cellSize);
         int y1 = (int) Math.floor(obj.bounds.y / cellSize);
@@ -211,17 +251,25 @@ public class SpatialHashGrid {
         return cellIds;
     }
 
+    /**
+     * Gets the size of each cell.
+     *
+     * @return the cell size
+     */
     public float getCellSize() {
         return cellSize;
     }
 
+    /**
+     * Debugging, do not need.
+     */
     public void printInfo() {
         System.out.println("No of static cells: " + staticCells.length);
         System.out.println("No of dynamic cells: " + dynamicCells.length);
         int n = 10;
-        System.out.println("Static cell " + n + " contains: " + staticCells[n].size() 
+        System.out.println("Static cell " + n + " contains: " + staticCells[n].size()
                 + " objects");
-        System.out.println("Dynaimic cell " + n + " contains: " + dynamicCells[n].size() 
+        System.out.println("Dynaimic cell " + n + " contains: " + dynamicCells[n].size()
                 + " objects");
     }
 }

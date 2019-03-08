@@ -19,6 +19,10 @@ package sidescroller;
 import java.awt.image.BufferedImage;
 
 /**
+ * A Tile is a game object that does not move during its lifespan. A Level
+ * consist of multiple tiles often stored as a 2-dimensional array. A Tile has a
+ * fixed width/height and has interchangeable texture.
+ *
  * @version 0.1.0
  * @author Mohammed Ibrahim
  */
@@ -35,18 +39,23 @@ public class Tile extends StaticGameObject {
     public final static int ML = 5; //mid left
     public final static int MM = 6; //mid mid
     public final static int MR = 7; //mid right
-
     public final static int WATER = 8;
     public final static int LAVA = 9;
 
-    //Public so I can call marioTL.position.x;
     public BufferedImage tileImg;
     private int id = -1;
 
     public boolean solid = false;
 
-    public Tile(float x, float y, float width, float height, int id) {
-        super(x, y, width, height);
+    /**
+     * Constructs a new Tile at (x,y) which is not solid.
+     *
+     * @param x the x position
+     * @param y the y position
+     * @param id the type of tile
+     */
+    public Tile(float x, float y, int id) {
+        super(x, y, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
 
         this.id = id;
         loadImage(id);
@@ -55,7 +64,7 @@ public class Tile extends StaticGameObject {
     }
 
     /**
-     * When we change the id, load correct image
+     * Loads the correct image when the id is changed.
      *
      * @param id spikeBlock image
      */
@@ -65,9 +74,9 @@ public class Tile extends StaticGameObject {
     }
 
     /**
-     * Depending on the id given, load the correct spikeBlock image
+     * Depending on the id given, load the correct asset.
      *
-     * @param path image path
+     * @param id tile type
      */
     private void loadImage(int id) {
         switch (id) {
@@ -90,19 +99,8 @@ public class Tile extends StaticGameObject {
                 tileImg = Assets.marioMR;
                 break;
             case WALL:
-//                tileImg = Assets.puzzlebuddyWall;
-//                double num = Math.random();
-//                if(num < 0.5){
-//                    tileImg = Assets.marioBlock;
-//                }else{
-//                    tileImg = Assets.marioBlock2;
-//                }
-
-//                tileImg = Assets.marioBlock2;
                 tileImg = Assets.marioBlock;
-
                 break;
-
             //Extra tiles
             case WATER:
                 //tileImg = Assets.spikeWater.getImage();
@@ -114,11 +112,10 @@ public class Tile extends StaticGameObject {
     }
 
     /**
-     * Switch to 1001 spike spikeBlockset
+     * Given a tile id, sets the tile image to the correct tile. Switch to 1001
+     * spike SpriteSheet.
      *
-     * Given a tile id, set the tile image to the correct tile
-     *
-     * @param id 0-7 (empty - wall)
+     * @param id ranges from 0-9 (empty - lava)
      */
     public void loadNewImage(int id) {
         switch (id) {
@@ -141,7 +138,6 @@ public class Tile extends StaticGameObject {
                 tileImg = Assets.spikeMR;
                 break;
             case WALL:
-//                tileImg = Assets.puzzlebuddyWall;
                 tileImg = Assets.spikeBlock;
                 break;
             //Extra tiles
@@ -154,43 +150,24 @@ public class Tile extends StaticGameObject {
         }
     }
 
+    /**
+     * Returns the unique tile id
+     *
+     * @return tile id
+     */
     public int getId() {
         return id;
     }
 
-//    public void setTile(int x, int y, int id) {
-//        setID(id);
-//
-////        System.out.println("Tile "+id);
-////        System.out.println("input x "+x);
-////        System.out.println("input y "+y);
-////        this.x = (x * Tile.TILE_WIDTH);
-////        this.y = (y * Tile.TILE_HEIGHT);
-////        System.out.println("spikeBlock Width "+Tile.TILE_WIDTH);
-////        System.out.println("spikeBlock Height "+Tile.TILE_HEIGHT);
-////        System.out.println("pos.x "+this.x);
-////        System.out.println("pos.y "+this.y+"\n");
-//        if (id != Tile.EMPTY) {
-//            hitbox = new Rectangle(this.x, this.y, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-//            solid = true;
-//        }
-//    }
     /**
-     * Given a tile id and boolean, sets the tile image and collision bounds
+     * Sets the tile image and collidable toggle
      *
      * @param id Tile type
      * @param b true if solid
      */
     public void setTile(int id, boolean b) {
-        //Sets id and loads image
-        setID(id);
+        setID(id);  //Sets id and loads image
         this.solid = b;
-//        if (solid) {
-////            bounds = new Rectangle.Float(position.x, position.y, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-////            System.out.println("Tile x: "+position.x);
-////            System.out.println("Tile y: "+position.y);
-//            bounds.setRect(position.x, position.y, Tile.TILE_WIDTH, Tile.TILE_HEIGHT);
-//        }
     }
 
     @Override
@@ -225,9 +202,10 @@ public class Tile extends StaticGameObject {
             case LAVA:
                 type = "LAVA";
                 break;
-            default: type = "EMPTY";
+            default:
+                type = "EMPTY";
         }
-        return "type: "+type;
+        return "type: " + type;
     }
 
 }

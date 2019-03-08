@@ -21,54 +21,67 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
 /**
+ * A simple Fireball which is fired from a Player.
+ *
  * @version 0.1.0
  * @author Mohammed Ibrahim
  */
 public class Fireball extends DynamicGameObject {
 
+    public static final float FIREBALL_WIDTH = 32f;
+    public static final float FIREBALL_HEIGHT = 32f;
+    private static final float SPEED = 150f;
     public static final int TIME_MS = 4000; //Total time to live
-    private int currentTime = TIME_MS;
+    private int age = TIME_MS;
     private boolean isDead = false;
 
     private BufferedImage fireball;
 //    private Animation fireball;
 
-    public Fireball(float x, float y, float width, float height, boolean facingRight) {
-        super(x, y, width, height);
+    /**
+     * Constructs a new Fireball at {@link x}, {@link y} with a set speed.
+     *
+     * @param x the horizontal position
+     * @param y the vertical position
+     * @param facingRight true if travelling right
+     */
+    public Fireball(float x, float y, boolean facingRight) {
+        super(x, y, FIREBALL_WIDTH, FIREBALL_HEIGHT);
 
         loadImages();
-//        width = fireball.getWidth();
-//        height = fireball.getHeight();
 
         position = new Vector2D(x, y);
         float dx, dy = 0;
         if (facingRight) {
-            dx = 150;
+            dx = SPEED;
         } else {
-            dx = -150;
+            dx = -SPEED;
         }
         velocity = new Vector2D(dx, dy);
         acceleration = new Vector2D(0, 100);
     }
 
     private void loadImages() {
-//        fireball = Assets.playerMo;
         fireball = Assets.spikeFireball;
     }
 
+    /**
+     * Dead is true if the age <= 0
+     *
+     * @return true if the fireball is dead
+     */
     public boolean isDead() {
         return isDead;
     }
 
     @Override
     void gameUpdate(float deltaTime) {
-        currentTime -= deltaTime * 1000;
+        age -= deltaTime * 1000;
         //If fireball has completed time
-        if (currentTime <= 0) {
+        if (age <= 0) {
             isDead = true;
         } else {
             //its alive print time
-//            System.out.println("fireball alive time: " + currentTime);
             velocity.add(acceleration.x * deltaTime, acceleration.y * deltaTime);
             position.add(velocity.x * deltaTime, velocity.y * deltaTime);
             bounds.setRect(position.x, position.y, bounds.width, bounds.height);
@@ -77,20 +90,6 @@ public class Fireball extends DynamicGameObject {
                 velocity.y *= -1;
             }
         }
-
-//        //Goes through every spikeBlock in the game (NOT GOOD)
-//        for (int j = 0; j < World.NO_OF_TILES_Y; j++) {
-//            for (int i = 0; i < World.NO_OF_TILES_X; i++) {
-//                Tile t = world.getTile(i, j);
-//                if (t.solid) {
-//                    //If we have a solid spikeBlock
-//                    if (bounds.intersects(t.bounds)) {
-//                        //Check inner hitbox for collision and respond
-//                        velocity.y *= -1;
-//                    }
-//                }
-//            }
-//        }//end outer for loop
     }
 
     @Override

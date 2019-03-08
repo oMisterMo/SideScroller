@@ -33,17 +33,21 @@ public class Animation {
     private long delay;
     private boolean playedOnce; //Some animation are only played once
 
+    /**
+     * Sets the frame array to null, it must be initialised with the setFrames
+     * method before it can be used.
+     */
     public Animation() {
         frames = null;
     }
 
     /**
-     * Determines which image in the array to return
+     * Updates the frame count based on the elapsed time.
      *
      * @param deltaTime time since last tick
      */
     public void update(float deltaTime) {
-        long elapsed = (System.nanoTime() - startTime) / 1000000;
+        long elapsed = (System.nanoTime() - startTime) / 1_000_000; //ns -> milli
 
         if (elapsed > delay) {
             currentFrame++;
@@ -57,14 +61,19 @@ public class Animation {
         }
     }
 
+    /**
+     * Gets an image from the {@link frames} list based on the current frame.
+     *
+     * @return a sprite from the animation
+     */
     public BufferedImage getImage() {
         return frames[currentFrame];
     }
 
     /**
-     * Assign a bitmap array to frames
+     * Assigns a bitmap array to this list.
      *
-     * @param frames The frame that's updated
+     * @param frames array of images
      */
     public void setFrames(BufferedImage[] frames) {
         this.frames = frames;
@@ -72,18 +81,29 @@ public class Animation {
         startTime = System.nanoTime();
     }
 
-    public void setDelay(long del) {
-        delay = del;
+    /**
+     * Sets the time delay of the current animation.
+     *
+     * @param delay delay in milliseconds
+     */
+    public void setDelay(long delay) {
+        this.delay = delay;
     }
 
-    private int getFrame() {
-        return currentFrame;
-    }
-
+    /**
+     * Checks whether or not the animation has played once. The animation is
+     * played fully when the current frame is greater than or equal to the size
+     * of the frames array.
+     *
+     * @return true if played once
+     */
     public boolean playedOnce() {
         return playedOnce;
     }
 
+    /**
+     * Resets the current frame to the first index of the BufferedImage array.
+     */
     public void resetAnimation() {
         currentFrame = 0;
     }

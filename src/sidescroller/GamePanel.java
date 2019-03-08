@@ -28,6 +28,7 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 
 /**
+ * Game screen which ties together all classes.
  *
  * @version 0.1.0
  * @author Mohammed Ibrahim
@@ -53,11 +54,13 @@ public class GamePanel extends JPanel implements Runnable {
 
     private final World world;
 
+    /**
+     * Default constructor, creates a new World
+     */
     public GamePanel() {
         super();
         setPreferredSize(new Dimension(GAME_WIDTH, GAME_HEIGHT));
         setFocusable(true);
-        //System.out.println(requestFocusInWindow());
         requestFocus(); //-> platform dependant
 
         initInput();
@@ -100,9 +103,11 @@ public class GamePanel extends JPanel implements Runnable {
 
         //GAME LOOP
         while (running) {
-            deltaTime = (System.nanoTime() - startTime) / 1_000_000_000.0f;
+            //Calculate time since last frame
+            deltaTime = (System.nanoTime() - startTime) / 1_000_000_000.0f; //ns -> sec
             startTime = System.nanoTime();
-            System.out.println("dt: " + deltaTime);
+
+            //Handle input, update and render
             handleInput();
             gameUpdate(deltaTime);
             Input.updateLastKey();
@@ -110,32 +115,32 @@ public class GamePanel extends JPanel implements Runnable {
             gameDraw();
 
             //How long it took to run
-            timeTaken = (System.nanoTime() - startTime) / 1_000_000;
-            //16ms - targetTime
+            timeTaken = (System.nanoTime() - startTime) / 1_000_000;    //ns -> milli
+            //16ms - timeTaken
             waitTime = targetTime - timeTaken;
-            if (waitTime < 0) {
-                //I get a negative value at the beg
-                System.out.println("NEGATIVE: " + waitTime);
-                System.out.println("targetTime = " + targetTime);
-                System.out.println("timeTaken = " + timeTaken + "\n");
-            }
-
             try {
                 //System.out.println("Sleeping for: " + waitTime);
-                //thread.sleep(waitTime);
-                Thread.sleep(waitTime);
-            } catch (Exception ex) {
+                thread.sleep(waitTime);
+            } catch (Exception e) {
 
             }
             totalTime += System.nanoTime() - startTime;
             frameCount++;
 
-            //If the current frame == 60  we calculate the average frame count
+            /*Debug*/
+            //Calculate average fps
             if (frameCount >= FPS) {
                 averageFPS = 1000 / ((totalTime / frameCount) / 1000_000);
                 frameCount = 0;
                 totalTime = 0;
                 //System.out.println("Average fps: " + averageFPS);
+            }
+            //Print negative wait time
+            if (waitTime < 0) {
+                //I get a negative value at the beg
+                System.out.println("NEGATIVE: " + waitTime);
+                System.out.println("targetTime = " + targetTime);
+                System.out.println("timeTaken = " + timeTaken + "\n");
             }
         }
     }
@@ -196,25 +201,18 @@ public class GamePanel extends JPanel implements Runnable {
         g2.dispose();
     }
 
-    /**
-     * *************** EVENT HANDERLERS ***********************
-     */
+    /* *************** EVENT HANDERLERS *********************** */
     //Handle Input ** Inner Class
     private class TAdapter extends KeyAdapter {
 
-        //When a key is pressed, let the CRAFT class deal with it.
+        //When a key is pressed
         @Override
         public void keyPressed(KeyEvent e) {
             //Handle player from world movement
-//            player.keyPressed(e);
-
-//            world.keyPressed(e);
         }
 
         @Override
         public void keyReleased(KeyEvent e) {
-            //ship.keyReleased(e);
-//            player.keyReleased(e);
         }
     }
 
@@ -223,24 +221,20 @@ public class GamePanel extends JPanel implements Runnable {
         @Override
         public void mouseClicked(MouseEvent e) {
             //System.out.println("CLICKED");
-
             //Clicked in one position
         }
 
         @Override
         public void mousePressed(MouseEvent e) {
             //System.out.println("PRESSED");
-
-            //tween.mousePressed(e);
-            //transition.mousePressed(e);
-            //dragon.mousePressed(e);
             if (e.getButton() == MouseEvent.BUTTON3) {
                 System.out.println("RIGT CLICKED");
                 int x = e.getX();
                 int y = e.getY();
-                world.player.position.set(x, y);
-                world.player.bounds.x = x;
-                world.player.bounds.y = y;
+                Player player = world.getPlayer();
+                player.position.set(x, y);
+                player.bounds.x = x;
+                player.bounds.y = y;
             }
         }
 
@@ -258,6 +252,5 @@ public class GamePanel extends JPanel implements Runnable {
         public void mouseExited(MouseEvent e) {
             //System.out.println("EXITED");
         }
-
     }
 }

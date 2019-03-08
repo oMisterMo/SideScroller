@@ -20,17 +20,16 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 /**
+ * Custom input handler.
+ *
  * @version 0.1.0
  * @author Mohammed Ibrahim
  */
 public class Input implements KeyListener {
 
-    private static boolean[] currentKey = new boolean[256];//needs improving
+    private static boolean[] currentKey = new boolean[256];
     private static boolean[] lastKey = new boolean[256];
 
-    /*
-        WHEN THE SYSTEM DETECTS KEYBOARD PRESES 
-    */
     @Override
     public void keyTyped(KeyEvent e) {
         currentKey[e.getKeyCode()] = true;
@@ -48,31 +47,40 @@ public class Input implements KeyListener {
         currentKey[e.getKeyCode()] = false;
     }
 
-    
-    /*
-        USED BY A GAME
-    */
+    /**
+     * Key held down.
+     *
+     * @param keyCode
+     * @return true
+     */
     public static boolean isKeyPressed(int keyCode) {
         return currentKey[keyCode];
     }
-    
+
     /**
-     * Just pressed once
-     * 
-     * current key and not last key pressed
-     * 
-     * @param keyCode
-     * @return 
+     * Just pressed once.
+     *
+     * @param keyCode the ASCII key code
+     * @return true if {@link keyCode} is pressed
      */
     public static boolean isKeyTyped(int keyCode) {
         return currentKey[keyCode] && !lastKey[keyCode];
     }
-    
-    public static boolean isKeyReleased(int keyCode){
+
+    /**
+     * Key released.
+     *
+     * @param keyCode the ASCII key code
+     * @return true if {@link keyCode} is released
+     */
+    public static boolean isKeyReleased(int keyCode) {
         return !currentKey[keyCode] && lastKey[keyCode];
     }
-    
-    public static void updateLastKey(){
+
+    /**
+     * Updated the state of the {@link lastKey} buffer.
+     */
+    public static void updateLastKey() {
         lastKey = currentKey.clone();
     }
 
