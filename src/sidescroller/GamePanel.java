@@ -16,10 +16,14 @@
  */
 package sidescroller;
 
+import common.Vector2D;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 import javax.swing.JPanel;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -47,6 +51,9 @@ public class GamePanel extends JPanel implements Runnable {
     private BufferedImage image;
     private Graphics2D g;
 
+    private Font font;
+    private Vector2D fontPos;
+    private Stroke stroke;
     private Input input;
 
     private final int FPS = 60;
@@ -55,7 +62,7 @@ public class GamePanel extends JPanel implements Runnable {
     private final World world;
 
     /**
-     * Default constructor, creates a new World
+     * Default constructor, creates a new World.
      */
     public GamePanel() {
         super();
@@ -63,8 +70,17 @@ public class GamePanel extends JPanel implements Runnable {
         setFocusable(true);
         requestFocus(); //-> platform dependant
 
+        initFont();
         initInput();
         world = new World();
+    }
+
+    private void initFont() {
+//        f = new Font("Comic Sans MS", Font.PLAIN, 25);
+//        f = new Font("Times new roman", Font.PLAIN, 25);
+        font = new Font("Courier new", Font.PLAIN, 25);
+        fontPos = new Vector2D(5, 60);
+        stroke = new BasicStroke(1);
     }
 
     private void initInput() {
@@ -74,7 +90,6 @@ public class GamePanel extends JPanel implements Runnable {
         addMouseListener(new GamePanel.MAdapter());
     }
 
-    //METHODS
     /**
      * Is called after the JPanel has been added to the JFrame component.
      */
@@ -100,7 +115,8 @@ public class GamePanel extends JPanel implements Runnable {
         running = true;
         image = new BufferedImage(GAME_WIDTH, GAME_HEIGHT, BufferedImage.TYPE_INT_RGB);
         g = (Graphics2D) image.getGraphics();
-
+        g.setFont(font);
+        
         //GAME LOOP
         while (running) {
             //Calculate time since last frame
@@ -172,7 +188,10 @@ public class GamePanel extends JPanel implements Runnable {
         switch (state) {
             case WORLD_STATE_RUNNING:
                 world.gameRender(g);
-                drawHelp();
+                //Draw FPS in red
+                g.setColor(Color.RED);
+                g.drawString("FPS:" + averageFPS, 5, 25);
+//                drawHelp();
                 break;
             case WORLD_STATE_GAMEOVER:
                 g.setColor(Color.WHITE);

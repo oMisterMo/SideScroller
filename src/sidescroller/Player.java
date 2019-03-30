@@ -18,11 +18,8 @@ package sidescroller;
 
 import common.Animation;
 import common.SpriteSheet;
-import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Stroke;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import common.Vector2D;
@@ -78,14 +75,12 @@ public class Player extends DynamicGameObject {
     private List<Fireball> fireball;    //Shitty fireballs
 
     //For debugging****************************
-    private Font font;
     private Vector2D fontPos;
-    private Stroke stroke;
     private String state_debug = "FALLING";
     private int numOfCollision = 0;
 
     /**
-     * Constructs a new Player at x, y
+     * Constructs a new Player at x, y.
      *
      * @param x the x position
      * @param y the y position
@@ -95,7 +90,7 @@ public class Player extends DynamicGameObject {
         initAnimations();
 
 //        initInnerHitbox();
-        initFont();
+        fontPos = new Vector2D(5, 60);
         fireball = new ArrayList<>(5);
         System.out.println("Player created...");
     }
@@ -161,14 +156,6 @@ public class Player extends DynamicGameObject {
                 size = fireball.size();
             }
         }
-    }
-
-    private void initFont() {
-//        f = new Font("Comic Sans MS", Font.PLAIN, 25);
-//        f = new Font("Times new roman", Font.PLAIN, 25);
-        font = new Font("Courier new", Font.PLAIN, 25);
-        fontPos = new Vector2D(5, 60);
-        stroke = new BasicStroke(1);
     }
 
     /**
@@ -282,7 +269,8 @@ public class Player extends DynamicGameObject {
                 playerState = STATE_RUN;
                 velocity.x = -RUN_SPEED;
             }
-        } else if (Input.isKeyPressed(KeyEvent.VK_F) && Input.isKeyPressed(KeyEvent.VK_M)) {
+        } else if ((Input.isKeyPressed(KeyEvent.VK_D) || Input.isKeyPressed(KeyEvent.VK_F))
+                && Input.isKeyPressed(KeyEvent.VK_M)) {
             //Move right
             if (playerState != STATE_RUN) {
                 facingRight = true;
@@ -298,7 +286,8 @@ public class Player extends DynamicGameObject {
                 playerState = STATE_WALK;
                 velocity.x = -WALK_SPEED;
             }
-        } else if (Input.isKeyPressed(KeyEvent.VK_F)) { //VK_D seems broken
+        } else if (Input.isKeyPressed(KeyEvent.VK_D) 
+                || Input.isKeyPressed(KeyEvent.VK_F)) { //VK_D seems broken
             if (playerState != STATE_WALK) {
                 System.out.println("right walk");
                 facingRight = true;
@@ -307,7 +296,9 @@ public class Player extends DynamicGameObject {
             }
         }
         //Check for release of walk keys
-        if (Input.isKeyReleased(KeyEvent.VK_A) || Input.isKeyReleased(KeyEvent.VK_F)) {
+        if (Input.isKeyReleased(KeyEvent.VK_A) 
+                || Input.isKeyReleased(KeyEvent.VK_D)
+                || Input.isKeyReleased(KeyEvent.VK_F)) {
             if (playerState != STATE_IDLE) {
                 System.out.println("idle");
                 playerState = STATE_IDLE;
@@ -491,7 +482,6 @@ public class Player extends DynamicGameObject {
      */
     public void drawInfo(Graphics2D g) {
         g.setColor(Color.WHITE);
-        g.setFont(font);
 //        g.drawString("Draw REAL POS", fontPos.x, fontPos.y);
 //        g.drawString("Pos: " + String.valueOf(position), fontPos.x, fontPos.y);
         g.drawString("Pos: " + "x: " + (int) bounds.x + ", y: " + (int) bounds.y, fontPos.x, fontPos.y);
